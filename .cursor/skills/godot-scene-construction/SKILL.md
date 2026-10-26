@@ -5,7 +5,7 @@ description: Build or edit a FinoFarm Godot 4 scene, camera, character, or level
 
 # Godot scene construction
 
-The game is a Godot 4.7 GDScript project. The main scene is `res://scenes/farm/first_farm.tscn`. Do not replace it with an HTML page or a menu that has no 3D world.
+The game is a Godot 4.7 GDScript project. The main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is `res://scenes/farm/first_farm.tscn`. Do not replace either with an HTML page or a menu that has no 3D world.
 
 ## Steps
 
@@ -14,7 +14,7 @@ The game is a Godot 4.7 GDScript project. The main scene is `res://scenes/farm/f
 3. Put scenes in `scenes/<domain>/`. Instance child scenes instead of pasting a second barn into `first_farm.tscn`.
 4. New temporary meshes use a `Placeholder` node name and a `placeholder` row in `docs/asset-registry.md`. Say that in the art bible if the mesh is visible.
 5. Camera changes go through `FarmCamera.orbit`, `zoom_by`, `pan_keys`, and `pan_screen`. Do not add a second camera script.
-6. Walker motion for the block-out goes through `PlaceholderWalker.advance`. A real character replaces that node under task FF-19.
+6. Character motion goes through `Farmhand.advance`. The walk clip plays while moving. Do not add a second sine-wave pose.
 7. Update `tests/run_scene_checks.gd` when a required node name changes.
 
 ## Example

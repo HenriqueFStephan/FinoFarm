@@ -1,6 +1,6 @@
 # FinoFarm art bible
 
-Status: block-out palette and rules. No mesh in the first scene is approved final art.
+Status: cozy stylized direction. The barn and the farmhand are in-engine models. They are not approved final art. Terrain, trees, and the plot marker are still placeholders.
 
 ## Target
 
@@ -34,24 +34,18 @@ These hex values are the materials on the first scene. Final textures stay in th
 
 Interface surfaces, when UI arrives, use warm cream panels (`#F3E6C8` range) and amber for rewards. Do not invent a second palette for the menu.
 
-## Placeholders in the first scene
+## In the farm scene
 
-Every mesh below is a Godot primitive or a shader on a plane. There is no Blender source, no texture set, and no approved silhouette. Label them placeholders in reviews, issues, and the asset registry.
+| Node | What it actually is | Status |
+| --- | --- | --- |
+| `PlaceholderTerrain` | Subdivided plane. Shader fakes hills at the edges and a square dirt loop. The center is flat so the character does not sink. | placeholder |
+| `Barn` | glTF from `tools/blender/barn.py`. Gable roof, doors, windows, cupola. Flat colors from this palette. No textures. | in-engine, not accepted final art |
+| `PlaceholderTreeA`, `PlaceholderTreeB`, `PlaceholderTreeC` | Cylinder trunk, sphere canopy. | placeholder |
+| `Farmhand` | glTF from `tools/blender/farmhand.py`. One skin, `idle` and `walk` clips. The model child is scaled `1.55` so the figure reads at the default camera. | in-engine, not accepted final art |
+| `PlaceholderPlotMarker`, `PlaceholderPlotHover` | Cylinder post and a box flag. | placeholder |
+| `PlaceholderSelectionRing` | Flat cylinder shown when the barn is selected. | placeholder |
 
-| Node | What it actually is |
-| --- | --- |
-| `PlaceholderTerrain` | Subdivided plane. Shader fakes hills at the edges and a square dirt loop. The center is flat so the walker does not sink. |
-| `PlaceholderBarn` | Boxes for slab, walls, door, and window. `PrismMesh` for the roof. |
-| `PlaceholderTreeA`, `PlaceholderTreeB`, `PlaceholderTreeC` | Cylinder trunk, sphere canopy. |
-| `PlaceholderWalker` | Boxes and a sphere. Limb swing is `sin(distance)` in `placeholder_walker.gd`. It is not a skeleton or an exported clip. |
-
-A captured frame of this scene is a block-out check. It is not art approval. Task FF-8 is a GPU review of the same scene. Tasks FF-18 and FF-19 replace the barn and the walker.
-
-## Future character target
-
-When a real character is modeled, aim for a large readable head, consistent proportions, a role-readable outfit, and clips for idle, walk, carry, celebrate, rest, and equipment interaction. The block-out walker does not meet that target. Its only job is to walk in the engine so later clips have a scene to land in.
-
-Scale in the first scene is `1.25` on `PlaceholderWalker` so the block-out reads at the default camera distance. Do not treat that scale as the final proportion guide.
+Do not describe the terrain, trees, marker, or ring as finished art. Do not describe the barn or the farmhand as an approved final asset. Carry, celebrate, rest, and work clips are not in this build. The old box walker and its sine-wave swing are gone.
 
 ## Camera readability
 

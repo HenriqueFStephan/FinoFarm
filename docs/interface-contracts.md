@@ -57,32 +57,62 @@ Input already wired: right mouse or Q/E orbit, R/F pitch, middle mouse or WASD/a
 
 At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +X.
 
-### `PlaceholderWalker` (`Node3D`)
+### `Farmhand` (`Node3D`, `scripts/characters/farmhand.gd`)
 
-- `advance(delta_seconds)` moves along the square loop at speed `1.7` and updates the limb pose.
+- `advance(delta_seconds)` moves along the square loop at speed `1.7`.
 - `_process` calls `advance`. Tests call `advance(1.0)` and expect about `1.7` units of travel.
-- This script is the placeholder locomotion. A real character replaces the node, it does not grow a second movement system beside it.
+- While speed is positive the imported `walk` clip plays. `advance(0)` or a non-positive delta plays `idle`.
+- The glTF skin moves the limbs. There is no sine-wave pose beside the clip.
+- `animation_player()` returns the imported `AnimationPlayer`.
+
+### `PlotGrid`
+
+- `CELL` is `2`. Cells clamp to `-4..4`.
+- `snap_cell(world_x, world_z)` rounds to the nearest cell. `cell_center` is `(x * 2, 0, z * 2)`.
+- Cells with `abs(x) <= 1` and `abs(z) <= 1` are `blocked` (the barn pad).
+- One marker. `place_at` sets it, `move_to` requires one, `remove` clears it.
+- `ground_hit(origin, direction)` intersects the y=0 plane. Upward rays miss.
+- `to_save()` is `{}` or `{x, z}`.
+
+### `FarmHud`
+
+- `bind(game)` sets the name, the region display name, and `Funds <n>` from the save.
+- It does not keep its own copy of the numbers.
 
 ## Scene nodes
 
-See [architecture](architecture.md). Tests require `PlaceholderTerrain`, `PlaceholderBarn/Walls`, `PlaceholderBarn/Roof`, `PlaceholderBarn/Door`, `PlaceholderTreeA`, `PlaceholderWalker` with `LegL` and `LegR`, and `FarmCamera`. The terrain material must be a `ShaderMaterial`.
+The main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is `res://scenes/farm/first_farm.tscn` and instances `scenes/farm/farm_stage.tscn`.
 
-## Save schema (not implemented)
+Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA`, `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker`, and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
 
-Task FF-12. Version field `schema` integer, starting at `1`. Proposed top-level keys, so UI work does not invent a second shape:
+The menu has `ContinueButton`, `MyFarmsButton`, `NewGameButton`, `SettingsButton`, `CreditsButton`, and `ExitButton` over the same stage.
+
+## Save schema 1
+
+`SaveGame.SCHEMA` is `1`. `from_dict` returns `{ok, error, game}`. A missing schema, schema `0`, or any schema other than `1` returns `game: null` and does not apply the other fields.
+
+Keys:
 
 - `schema`
 - `farm_id`
 - `farm_name`
 - `region_id`
 - `funds`
-- `inventory` (same stacking rule as `FarmInventory.snapshot`)
+- `level` (new farms are `1`)
+- `playtime_seconds`
+- `last_saved_unix`
+- `inventory` (`FarmInventory.snapshot()` keys, `resource#grade`)
 - `workshop` (`recipe_id`, `ticks_remaining`, `locked_grade`)
-- `camera` (`focus`, `yaw`, `pitch`, `distance`)
+- `camera` (`focus` as three numbers, `yaw`, `pitch`, `distance`)
 - `tutorial_step`
+- `marker` (`{}` or `{x, z}`)
 
-No writer exists. Do not add `user://` saves until FF-12 and its round-trip test are in `tools/validate.sh`.
+`create_new` requires a non-empty name of at most 32 characters and a catalog region. Starting funds are `RegionCatalog.PURSE - property_cost` (purse `500`, untuned). The file also stores 4 common Verdant Fiber so the inventory snapshot is real. That stack is not a grow recipe.
 
-## Region rows (not implemented)
+`FarmLibrary` writes `user://saves/<farm_id>.json` plus `index.json` (`order`, `active_id`). Tests pass a different `root_path`. `write` makes that farm active.
 
-Task FF-11. A region is data: `id`, display name, climate label, season amplitude, property cost, upkeep modifier, infrastructure difficulty, opportunity text, challenge text. No latitude, soil chemistry, or legal rules. The four charter sketches are the first rows, with made-up gameplay numbers, clearly marked as untuned.
+## Region rows
+
+`RegionCatalog` is data. Fields: `id`, `display_name`, `climate_label`, `season_amplitude`, `property_cost`, `upkeep_modifier`, `infrastructure_difficulty`, `opportunity`, `challenge`, `starting_funds`, `map_x`, `map_y`. No latitude, soil, statute, or cultivation fields.
+
+Ids: `northern_homestead`, `tropical_valley`, `innovation_plains`, `golden_fields`. Numbers are untuned gameplay tuning. `map_x` and `map_y` are layout fractions for the menu, not geography.

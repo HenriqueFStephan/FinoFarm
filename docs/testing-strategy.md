@@ -14,7 +14,10 @@ The script prints `godot <version>`, then:
 1. `godot --headless --path . --import --quit`
 2. `godot --headless --path . --check-only -s res://<each gameplay script>`
 3. `godot --headless --path . -s res://tests/run_simulation_tests.gd`
-4. `godot --headless --path . -s res://tests/run_scene_checks.gd`
+4. `godot --headless --path . -s res://tests/run_region_tests.gd`
+5. `godot --headless --path . -s res://tests/run_save_load_tests.gd`
+6. `godot --headless --path . -s res://tests/run_placement_tests.gd`
+7. `godot --headless --path . -s res://tests/run_scene_checks.gd`
 
 Exit code is the Godot exit code. `set -e` stops on the first failure.
 
@@ -34,13 +37,17 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 
 ## What the scene checks cover
 
-`tests/run_scene_checks.gd` loads the main scene after the tree is up (`call_deferred`, because `_initialize` runs too early).
+`tests/run_scene_checks.gd` loads scenes after the tree is up (`call_deferred`, because `_initialize` runs too early).
 
-- Main scene path is the farm.
-- Placeholder terrain, barn, roof, door, a tree, the walker, and the camera exist.
-- Terrain uses the shader material.
-- `advance(1.0)` moves the walker about `1.7` units and swings a leg.
+- Main scene path is the menu.
+- The farm has placeholder terrain, an imported barn mesh, a tree, the farmhand, and the camera.
+- The farmhand has a skeleton. `walk` and `idle` exist. `advance(1.0)` moves about `1.7` units and leaves `walk` playing.
+- The HUD name, region, and funds come from a save written in the test.
+- A saved marker appears on its cell. The player can move it, remove it, and a barn cell selects the barn instead.
 - Zoom clamps, orbit distance holds, and yaw-0 pan matches the contract.
+- The menu exposes Continue, My Farms, New Game, Settings, Credits, and Exit. Continue starts disabled. Two created farms show as cards. Region markers render the catalog fields.
+
+`tests/run_region_tests.gd`, `tests/run_save_load_tests.gd`, and `tests/run_placement_tests.gd` do not instance a 3D scene. The save tests use a throwaway `user://` directory.
 
 This does not move the mouse. Input is covered because the mouse handlers call the same methods. A frame capture is still required when the picture changes.
 
@@ -59,11 +66,10 @@ There is no image-diff harness yet. FF-8 is the first human or GPU review. Add p
 
 ## Not covered yet
 
-- Save/load (FF-12). The skill `save-load-validation` says how to add it.
 - Export templates and HTML5 (FF-7).
 - Mouse-drag orbit in a window. The math is tested; a desktop pass should still drag once.
 - Performance numbers.
-- Blender exports as game assets. `tools/blender/export_probe.py` only checks that Blender can write a throwaway glTF to `/tmp`.
+- `tools/blender/export_probe.py` still only writes a throwaway cube to `/tmp`. The barn and farmhand generators are the project assets.
 
 ## Definition of done
 

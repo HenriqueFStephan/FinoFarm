@@ -51,4 +51,4 @@ FF-17, FF-18, and FF-19 can proceed beside the menu once their interfaces are un
 
 ## Gap from Milestone 0
 
-Today the player is dropped into one unsaved scene. The building and walker are primitives. There is no menu, map, placement, or HUD beyond a control hint. Calling that Milestone 1 would fail the acceptance condition in the charter.
+Milestone 0 dropped the player into one unsaved scene with a primitive barn and a box walker. This slice replaces that entry with the menu flow, schema-1 saves, a grid marker, a HUD, a glTF barn, and a rigged walk cycle. Terrain, trees, and the plot marker are still placeholders. The production-to-order loop is still Milestone 2.

@@ -1,0 +1,117 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/buildings/barn.tscn" id="1_barn"]
+[ext_resource type="PackedScene" path="res://scenes/characters/farmhand.tscn" id="2_hand"]
+[ext_resource type="Script" path="res://scripts/camera/farm_camera.gd" id="3_camera"]
+[ext_resource type="Shader" path="res://assets/shaders/placeholder_terrain.gdshader" id="4_shader"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.32, 0.55, 0.86, 1)
+sky_horizon_color = Color(0.74, 0.84, 0.9, 1)
+ground_bottom_color = Color(0.29, 0.38, 0.24, 1)
+ground_horizon_color = Color(0.55, 0.62, 0.42, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.64, 0.58, 1)
+ambient_light_energy = 0.28
+tonemap_mode = 2
+tonemap_exposure = 1.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(48, 48)
+subdivide_width = 48
+subdivide_depth = 48
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_terrain"]
+shader = ExtResource("4_shader")
+shader_parameter/grass_a = Color(0.3, 0.48, 0.24, 1)
+shader_parameter/grass_b = Color(0.16, 0.32, 0.14, 1)
+shader_parameter/path_color = Color(0.52, 0.37, 0.2, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_trunk"]
+top_radius = 0.12
+bottom_radius = 0.16
+height = 1.15
+radial_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="Mat_trunk"]
+albedo_color = Color(0.431, 0.29, 0.173, 1)
+roughness = 0.9
+
+[sub_resource type="SphereMesh" id="SphereMesh_canopy"]
+radius = 0.78
+height = 1.35
+radial_segments = 16
+rings = 8
+
+[sub_resource type="StandardMaterial3D" id="Mat_canopy"]
+albedo_color = Color(0.184, 0.541, 0.271, 1)
+roughness = 0.88
+
+[node name="FarmStage" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-48, 38, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 0.9
+shadow_enabled = true
+directional_shadow_max_distance = 48.0
+
+[node name="PlaceholderTerrain" type="MeshInstance3D" parent="."]
+mesh = SubResource("PlaneMesh_ground")
+surface_material_override/0 = SubResource("ShaderMaterial_terrain")
+
+[node name="Barn" parent="." instance=ExtResource("1_barn")]
+
+[node name="PlaceholderTreeA" type="Node3D" parent="."]
+position = Vector3(11.5, 0, -5)
+
+[node name="Trunk" type="MeshInstance3D" parent="PlaceholderTreeA"]
+position = Vector3(0, 0.58, 0)
+mesh = SubResource("CylinderMesh_trunk")
+surface_material_override/0 = SubResource("Mat_trunk")
+
+[node name="Canopy" type="MeshInstance3D" parent="PlaceholderTreeA"]
+position = Vector3(0, 1.55, 0)
+mesh = SubResource("SphereMesh_canopy")
+surface_material_override/0 = SubResource("Mat_canopy")
+
+[node name="PlaceholderTreeB" type="Node3D" parent="."]
+position = Vector3(-11, 0, -2)
+
+[node name="Trunk" type="MeshInstance3D" parent="PlaceholderTreeB"]
+position = Vector3(0, 0.58, 0)
+mesh = SubResource("CylinderMesh_trunk")
+surface_material_override/0 = SubResource("Mat_trunk")
+
+[node name="Canopy" type="MeshInstance3D" parent="PlaceholderTreeB"]
+position = Vector3(0, 1.55, 0)
+mesh = SubResource("SphereMesh_canopy")
+surface_material_override/0 = SubResource("Mat_canopy")
+
+[node name="PlaceholderTreeC" type="Node3D" parent="."]
+position = Vector3(2, 0, -11)
+
+[node name="Trunk" type="MeshInstance3D" parent="PlaceholderTreeC"]
+position = Vector3(0, 0.58, 0)
+mesh = SubResource("CylinderMesh_trunk")
+surface_material_override/0 = SubResource("Mat_trunk")
+
+[node name="Canopy" type="MeshInstance3D" parent="PlaceholderTreeC"]
+position = Vector3(0, 1.55, 0)
+mesh = SubResource("SphereMesh_canopy")
+surface_material_override/0 = SubResource("Mat_canopy")
+
+[node name="Farmhand" parent="." instance=ExtResource("2_hand")]
+
+[node name="FarmCamera" type="Camera3D" parent="."]
+script = ExtResource("3_camera")
