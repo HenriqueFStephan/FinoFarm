@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/farm/farm_stage.tscn" id="1_stage"]
 [ext_resource type="Script" path="res://scripts/farm/farm_session.gd" id="2_play"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/placeholder_crop.tscn" id="5_crop"]
 [ext_resource type="PackedScene" path="res://scenes/buildings/placeholder_workshop.tscn" id="6_shop"]
 [ext_resource type="PackedScene" path="res://scenes/buildings/placeholder_loft.tscn" id="7_loft"]
+[ext_resource type="PackedScene" path="res://scenes/characters/workshop_worker.tscn" id="8_worker"]
 
 [sub_resource type="CylinderMesh" id="RingMesh"]
 top_radius = 2.35
@@ -41,6 +42,9 @@ surface_material_override/0 = SubResource("RingMat")
 
 [node name="PlaceholderWorkshop" parent="." instance=ExtResource("6_shop")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.4, 0, 2.8)
+
+[node name="WorkshopWorker" parent="." instance=ExtResource("8_worker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.15, 0, 4.95)
 
 [node name="PlaceholderBarnLoft" parent="." instance=ExtResource("7_loft")]
 transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, 2.65, 2.72, 1.45)

@@ -18,7 +18,8 @@ The script prints `godot <version>`, then:
 5. `godot --headless --path . -s res://tests/run_save_load_tests.gd`
 6. `godot --headless --path . -s res://tests/run_placement_tests.gd`
 7. `godot --headless --path . -s res://tests/run_economy_tests.gd`
-8. `godot --headless --path . -s res://tests/run_scene_checks.gd`
+8. `godot --headless --path . -s res://tests/run_staff_tests.gd`
+9. `godot --headless --path . -s res://tests/run_scene_checks.gd`
 
 Exit code is the Godot exit code. `set -e` stops on the first failure.
 
@@ -49,6 +50,19 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 - `FarmLoop` walks place, grow, harvest, bundle, deliver, and buy, and ends on the done step.
 - Plot, order, and upgrade state round-trip. A schema-1 dict without those keys still loads. Stage `9` is rejected.
 
+## What the staff tests cover
+
+`tests/run_staff_tests.gd` does not load the farm scene.
+
+- Two candidates expose the six ratings, each from 1 to 10. Editing a returned copy does not change the catalog.
+- Attribute totals change `bundle_fiber` duration. An empty assignee keeps the catalog's 4 ticks.
+- Alex and Bram, run for the shorter of their two durations, do not share an inventory snapshot. One has a bundle and the other does not.
+- The tick before completion does not grant the bundle. One call of the full duration and twice as many half-second steps match.
+- Unknown hires, a second hire, and assigning someone who is not hired leave the roster alone.
+- Switching the assignee does not change ticks already on the loom. Hiring does not change funds.
+- Hired ids and the workshop assignee round-trip. A file without `staff` loads empty. Unknown ids, duplicates, and an assignee who was not hired are rejected.
+- Mara's eight prompt strings are unchanged.
+
 ## What the scene checks cover
 
 `tests/run_scene_checks.gd` loads scenes after the tree is up (`call_deferred`, because `_initialize` runs too early).
@@ -62,6 +76,7 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 - The menu exposes Continue, My Farms, New Game, Settings, Credits, and Exit. Continue starts disabled. Two created farms show as cards. Region markers render the catalog fields.
 - The workshop, crop, and loft nodes exist. The loft starts hidden. The crop mesh follows the stage name. The loom does not move while idle and does move while operating.
 - `play_intro_cycle` on that farm changes funds by `+180 - 400`, shows the loft, and leaves the order delivered.
+- Crew is hidden on the opening step. After the lesson, hiring Alex and assigning them shows `WorkshopWorker`, and starting the loom plays `work`.
 
 `tests/run_region_tests.gd`, `tests/run_save_load_tests.gd`, and `tests/run_placement_tests.gd` do not instance a 3D scene. The save tests use a throwaway `user://` directory.
 

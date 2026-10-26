@@ -61,6 +61,7 @@ func _farm() -> String:
 		"PlaceholderCrop",
 		"PlaceholderWorkshop",
 		"PlaceholderBarnLoft",
+		"WorkshopWorker",
 		"Hud",
 	]:
 		if farm.get_node_or_null(node_name) == null:
@@ -99,6 +100,14 @@ func _farm() -> String:
 		return "hud region %s" % region_label.text
 	if funds_label.text != "Funds 4242":
 		return "hud funds %s" % funds_label.text
+	var opening := farm.get_node("Hud/HudRoot/TutorialPanel/TutorialText") as Label
+	if not opening.text.contains("Place a plot"):
+		return "opening tutorial %s" % opening.text
+	var crew_button := farm.get_node_or_null("Hud/HudRoot/ActionColumn/CrewButton") as Button
+	if crew_button == null:
+		return "no crew button"
+	if crew_button.visible:
+		return "crew visible during the lesson"
 	var marker: Node3D = farm.get_node("PlaceholderPlotMarker")
 	if not marker.visible:
 		return "saved marker hidden"
@@ -212,6 +221,58 @@ func _economy(farm) -> String:
 	var order_body := session.get_node("Hud/HudRoot/OrderPanel/Box/OrderBody") as Label
 	if not order_body.text.contains("Delivered"):
 		return "order %s" % order_body.text
+	return _crew(session)
+
+
+func _crew(session: FarmSession) -> String:
+	var worker := session.get_node("WorkshopWorker") as WorkshopWorker
+	if worker == null:
+		return "no workshop worker"
+	if worker.visible:
+		return "worker visible before hire"
+	var spot := worker.global_position.distance_to(WorkshopRig.WORLD_POSITION)
+	if spot < 0.8 or spot > 2.6:
+		return "worker distance %.2f" % spot
+	var anim: AnimationPlayer = worker.animation_player()
+	if anim == null or not anim.has_animation("work") or not anim.has_animation("idle"):
+		return "worker clips"
+	var work: Animation = anim.get_animation("work")
+	if work.length < 0.4 or work.get_track_count() < 4:
+		return "work clip length %.3f tracks %d" % [work.length, work.get_track_count()]
+	if session.hire_worker("nope") == "":
+		return "hired unknown"
+	if session.hire_worker("alex_morgan") != "":
+		return "hire"
+	if worker.visible:
+		return "visible before assign"
+	if session.assign_worker("alex_morgan") != "":
+		return "assign"
+	if not worker.visible:
+		return "hidden while assigned"
+	if worker.current_clip() != "idle":
+		return "idle clip %s" % worker.current_clip()
+	var name_label := worker.get_node("WorkerName") as Label3D
+	if name_label.text != "Alex Morgan":
+		return "name %s" % name_label.text
+	var pace := WorkerPace.bundle_ticks(StaffCatalog.worker("alex_morgan"))
+	if session.start_workshop() != "":
+		return "restart bundle"
+	if session.loop.workshop.ticks_remaining != pace:
+		return "assigned ticks %d" % session.loop.workshop.ticks_remaining
+	if not session.workshop_rig.operating:
+		return "loom idle while assigned"
+	if worker.current_clip() != "work":
+		return "work clip %s" % worker.current_clip()
+	if session.loop.tutorial.step != TutorialTrack.DONE:
+		return "tutorial moved"
+	var prompt := session.get_node("Hud/HudRoot/TutorialPanel/TutorialText") as Label
+	if not prompt.text.begins_with("Mara:"):
+		return "mara missing"
+	if not prompt.text.contains("loft"):
+		return "done line changed"
+	var crew_button := session.get_node("Hud/HudRoot/ActionColumn/CrewButton") as Button
+	if not crew_button.visible:
+		return "crew hidden after the lesson"
 	return ""
 
 

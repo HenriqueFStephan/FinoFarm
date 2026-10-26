@@ -21,6 +21,7 @@ var _barn_selected := false
 @onready var selection_ring: Node3D = $PlaceholderSelectionRing
 @onready var crop: CropVisual = $PlaceholderCrop
 @onready var workshop_rig: WorkshopRig = $PlaceholderWorkshop
+@onready var workshop_worker: WorkshopWorker = $WorkshopWorker
 @onready var loft: Node3D = $PlaceholderBarnLoft
 @onready var hud: FarmHud = $Hud
 
@@ -176,6 +177,7 @@ func refresh_presentation() -> void:
 	_sync_loft()
 	if workshop_rig != null:
 		workshop_rig.operating = loop.workshop.is_busy()
+	_sync_worker()
 	if hud != null and game != null:
 		hud.refresh(game, loop, _barn_selected)
 		hud.set_marker_available(grid.has_marker)
@@ -277,6 +279,32 @@ func _sync_crop() -> void:
 		crop.global_position = PlotGrid.cell_center(grid.cell)
 
 
+func hire_worker(worker_id: String) -> String:
+	var err := loop.hire_worker(worker_id)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func assign_worker(worker_id: String) -> String:
+	var err := loop.assign_workshop(worker_id)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func _sync_worker() -> void:
+	if workshop_worker == null:
+		return
+	var person := loop.roster.assigned_worker()
+	var display_name := ""
+	if not person.is_empty():
+		display_name = str(person["name"])
+	workshop_worker.show_assignment(not person.is_empty(), loop.workshop.is_busy(), display_name)
+
+
 func _sync_loft() -> void:
 	if loft != null:
 		loft.visible = loop.upgrades.owns("barn_loft")
@@ -312,6 +340,12 @@ func _connect_hud() -> void:
 		hud.order_deliver_pressed.connect(fulfill_order)
 	if not hud.upgrade_pressed.is_connected(buy_loft):
 		hud.upgrade_pressed.connect(buy_loft)
+	if not hud.crew_pressed.is_connected(_on_crew_button):
+		hud.crew_pressed.connect(_on_crew_button)
+	if not hud.hire_requested.is_connected(hire_worker):
+		hud.hire_requested.connect(hire_worker)
+	if not hud.assign_requested.is_connected(assign_worker):
+		hud.assign_requested.connect(assign_worker)
 
 
 func _on_remove_marker() -> void:
@@ -326,3 +360,8 @@ func _on_workshop_button() -> void:
 
 func _on_orders_button() -> void:
 	hud.open_orders(not hud.orders_open)
+
+
+func _on_crew_button() -> void:
+	hud.open_crew(not hud.crew_open)
+	refresh_presentation()

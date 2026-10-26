@@ -75,6 +75,20 @@ FF-3
 
 FF-22 hangs off FF-12 and FF-20. FF-27 hangs off FF-12. FF-26 needs the four player steps, not a new scene of its own.
 
+## Milestone 3
+
+No new GitHub issues. These rows are the claim.
+
+| Id | Issue | Title | Owner | Status | Depends on | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| FF-28 | — | Six-attribute recruitment list | `bc-826286b1-5907-533a-9ac4-a9cb0f775a86` | in_review | FF-26 | `tests/run_staff_tests.gd` lists Alex Morgan and Bram Holt. Each of the six ratings is from 1 to 10. |
+| FF-29 | — | Hire into schema 1 | `bc-826286b1-5907-533a-9ac4-a9cb0f775a86` | in_review | FF-12, FF-28 | A file without `staff` still loads. Hired ids round-trip. Unknown ids and duplicates are rejected. Schema stays `1`. |
+| FF-30 | — | Workshop assignment changes bundle time | `bc-826286b1-5907-533a-9ac4-a9cb0f775a86` | in_review | FF-23, FF-28 | Two different assignments do not share an inventory snapshot at the shorter duration. An unassigned bench keeps the catalog's 4 ticks. |
+| FF-31 | — | Worker visible at the loom | `bc-826286b1-5907-533a-9ac4-a9cb0f775a86` | in_review | FF-19, FF-30 | The scene check hides `WorkshopWorker` until assign, then plays `work` while the job is busy. The mesh is the farmhand again, not finished art. |
+| FF-32 | — | Crew panel after Mara's lesson | `bc-826286b1-5907-533a-9ac4-a9cb0f775a86` | in_review | FF-26, FF-29 | Mara's prompt strings stay put. The crew button is hidden on the place step and shown after done. |
+
+GitHub issues #2 through #14 stay the Milestone 0 and 1 issues. Milestone 3 does not add another issue for the same work.
+
 FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` unless they instance child scenes. Child scenes are the default.
 
 ## Environment
@@ -84,5 +98,5 @@ FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` 
 | FF-3 | Cloud or local. Needs Godot. A display is only for the capture. |
 | FF-7 | Cloud, with network access to official Godot templates. |
 | FF-8, FF-13, FF-18, FF-19 | Prefer a display. Headless import is necessary and not sufficient. |
-| FF-11, FF-12, FF-17 math, FF-21 through FF-27 rules | Cloud. Economy tests must not require rendering. The cycle screenshot needs a display. |
+| FF-11, FF-12, FF-17 math, FF-21 through FF-32 rules | Cloud. Staff and economy tests must not require rendering. The crew screenshot needs a display. |
 | FF-9 | Human admin on GitHub. |

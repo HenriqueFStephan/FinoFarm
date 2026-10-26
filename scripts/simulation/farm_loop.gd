@@ -11,6 +11,7 @@ var plot: CropPlot
 var orders: OrderBoard
 var upgrades: UpgradeShop
 var tutorial: TutorialTrack
+var roster: StaffRoster
 var last_event := ""
 
 
@@ -24,6 +25,7 @@ func _init() -> void:
 	orders = OrderBoard.new()
 	upgrades = UpgradeShop.new()
 	tutorial = TutorialTrack.new()
+	roster = StaffRoster.new()
 
 
 func read_from(game: SaveGame) -> String:
@@ -33,6 +35,7 @@ func read_from(game: SaveGame) -> String:
 	plot.import_state(game.plot)
 	orders.import_state(game.orders)
 	upgrades.import_state(game.upgrades)
+	roster.import_state(game.staff)
 	tutorial.step = clampi(game.tutorial_step, 0, TutorialTrack.DONE)
 	return ""
 
@@ -43,6 +46,7 @@ func write_to(game: SaveGame) -> void:
 	game.plot = plot.export_state()
 	game.orders = orders.export_state()
 	game.upgrades = upgrades.export_state()
+	game.staff = roster.export_state()
 	game.tutorial_step = tutorial.step
 
 
@@ -110,10 +114,11 @@ func start_bundle() -> String:
 	if grade == 0:
 		last_event = "Need %d Verdant Fiber." % amount
 		return "missing_inputs"
-	var err := workshop.try_start("bundle_fiber", {resource_id: grade})
+	var pace := WorkerPace.bundle_ticks(roster.assigned_worker())
+	var err := workshop.try_start("bundle_fiber", {resource_id: grade}, pace)
 	if err == "":
 		tutorial.notify("started")
-		last_event = "Workshop started. %d ticks until a Fiber Bundle." % int(recipe["duration_ticks"])
+		last_event = "Workshop started. %d ticks until a Fiber Bundle." % pace
 		return ""
 	if err == "missing_inputs":
 		last_event = "Need %d Verdant Fiber." % amount
@@ -167,6 +172,31 @@ func buy_loft(game: SaveGame) -> String:
 	if game.funds != before - int(spec["cost"]):
 		last_event = "Barn loft purchased for %d." % int(spec["cost"])
 	return ""
+
+
+func hire_worker(worker_id: String) -> String:
+	var err := roster.hire(worker_id)
+	if err == "":
+		var person := StaffCatalog.worker(worker_id)
+		last_event = "Hired %s." % str(person["name"])
+	elif err == "already_hired":
+		last_event = "Already hired."
+	else:
+		last_event = "No such candidate."
+	return err
+
+
+func assign_workshop(worker_id: String) -> String:
+	var err := roster.assign_workshop(worker_id)
+	if err == "":
+		var person := StaffCatalog.worker(worker_id)
+		var pace := WorkerPace.bundle_ticks(person)
+		last_event = "%s is at the workshop. A bundle takes %d ticks." % [str(person["name"]), pace]
+	elif err == "not_hired":
+		last_event = "Hire them first."
+	else:
+		last_event = "No such candidate."
+	return err
 
 
 func inventory_line() -> String:

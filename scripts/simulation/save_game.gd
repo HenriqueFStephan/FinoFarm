@@ -37,6 +37,7 @@ var plot: Dictionary = {
 }
 var orders: Dictionary = {"intro_bundle": "open"}
 var upgrades: Dictionary = {}
+var staff: Dictionary = {"hired": [], "workshop": ""}
 
 
 static func create_new(farm_name: String, region_id: String) -> Dictionary:
@@ -82,6 +83,7 @@ func to_dict() -> Dictionary:
 		"plot": plot.duplicate(true),
 		"orders": orders.duplicate(true),
 		"upgrades": upgrades.duplicate(true),
+		"staff": staff.duplicate(true),
 	}
 
 
@@ -123,6 +125,9 @@ static func from_dict(data: Dictionary) -> Dictionary:
 	var upgrades_value: Variant = _upgrades_from(data.get("upgrades", {}))
 	if upgrades_value == null:
 		return _fail("bad_upgrades")
+	var staff_value: Variant = _staff_from(data.get("staff", {}))
+	if staff_value == null:
+		return _fail("bad_staff")
 	var game := SaveGame.new()
 	game.schema = SCHEMA
 	game.farm_id = str(data["farm_id"])
@@ -140,6 +145,7 @@ static func from_dict(data: Dictionary) -> Dictionary:
 	game.plot = (plot_value as Dictionary).duplicate(true)
 	game.orders = (orders_value as Dictionary).duplicate(true)
 	game.upgrades = (upgrades_value as Dictionary).duplicate(true)
+	game.staff = (staff_value as Dictionary).duplicate(true)
 	return {"ok": true, "error": "", "game": game}
 
 
@@ -325,6 +331,33 @@ static func _upgrades_from(value: Variant) -> Variant:
 		if bool(raw[key]):
 			cleaned[upgrade_id] = true
 	return cleaned
+
+
+static func _staff_from(value: Variant) -> Variant:
+	if typeof(value) != TYPE_DICTIONARY:
+		return null
+	var raw: Dictionary = value
+	if raw.is_empty():
+		return {"hired": [], "workshop": ""}
+	var hired_value: Variant = raw.get("hired", [])
+	if typeof(hired_value) != TYPE_ARRAY:
+		return null
+	var hired: Array = []
+	var seen := {}
+	for item in hired_value:
+		if typeof(item) != TYPE_STRING:
+			return null
+		var worker_id := str(item)
+		if seen.has(worker_id) or StaffCatalog.worker(worker_id).is_empty():
+			return null
+		seen[worker_id] = true
+		hired.append(worker_id)
+	if raw.has("workshop") and typeof(raw["workshop"]) != TYPE_STRING:
+		return null
+	var workshop := str(raw.get("workshop", ""))
+	if workshop != "" and not seen.has(workshop):
+		return null
+	return {"hired": hired, "workshop": workshop}
 
 
 static func _fail(reason: String) -> Dictionary:
