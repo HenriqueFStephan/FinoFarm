@@ -36,6 +36,7 @@ Scripts are `class_name` types under `scripts/simulation/`. They extend `RefCoun
 - `tick(n)` finishes at most the current job. Extra ticks do not queue another craft.
 - Output grade is `GradeScale.minimum` of the consumed grades.
 - `try_start` takes an optional `duration_ticks`. Values below 1 keep the catalog duration. `FarmLoop` passes `WorkerPace.job_ticks` for that argument, including the shuttle-rack bonus when it is owned. The output amount stays the recipe amount.
+- `FarmLoop.apply_loom_rule` is the only caller that starts a recipe without a button. It does nothing unless the loom rule is owned, the tutorial is done, a worker is assigned, a priority is set, the plot is ready, and the loom is idle. It harvests that plot and then calls `try_start`. A busy loom returns `busy` and keeps its recipe and ticks.
 
 ### `SimClock` and `SimStepper`
 
@@ -101,6 +102,13 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 - Success subtracts the cost and sets owned.
 - The rack does not change a job that has already started. The next `bundle_fiber` or `twist_cord` loses one tick, floored at 1. `FarmLoop.buy_shuttle` also returns `tutorial` before the lesson ends and `needs_loft` before the loft is owned.
 
+### `ResearchBoard`
+
+- One unlock: `loom_rule`, cost `120`. `try_purchase` failure codes: `unknown_research`, `short_funds`, `already_owned`. Funds stay put on failure.
+- `FarmLoop.buy_loom_rule` returns `tutorial` before step `done`. It does not require the loft.
+- Priorities are `bundle_fiber` and `twist_cord`. `pack_textile` is not a priority. `set_loom_priority` returns `tutorial`, `locked`, or `unknown_priority` without storing the rejected choice.
+- `apply_loom_rule` returns `tutorial`, `locked`, `unassigned`, `no_priority`, `busy`, or `not_ready` without harvesting and without editing a running job. Success harvests the ready plot and starts that priority at `WorkerPace.job_ticks`.
+
 ### `TutorialTrack` and `FarmLoop`
 
 - Steps: `0` place, `1` grow, `2` harvest, `3` workshop, `4` wait for the bundle, `5` order, `6` loft, `7` done.
@@ -110,6 +118,7 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 - Hiring is not a tutorial step. `hire_worker` and `assign_workshop` are available to the simulation at any step. The crew button stays hidden until step `done`.
 - `start_cord` and `fulfill_cord` return `tutorial` before step `done`. Mara's bundle, delivery, and loft steps are unchanged.
 - `inventory_line()` always names Fiber Bundle and Fiber Cord, including a zero count.
+- `advance` calls `apply_loom_rule` after the clock tick. During the lesson that call returns `tutorial` and leaves the plot for Mara's harvest step.
 
 ### `StaffCatalog`, `StaffRoster`, and `WorkerPace`
 
@@ -128,6 +137,8 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 - `refresh(game, loop, barn_selected)` also sets the inventory line, Mara's prompt, and the last economy event from `FarmLoop`.
 - It does not keep its own copy of the numbers.
 - `CrewButton` is hidden until the tutorial step is `done`. The crew card reads names, ratings, and bundle ticks from `StaffCatalog` and `WorkerPace`.
+- `ResearchButton` is hidden until step `done`, and hides again once `loom_rule` is owned. Its label includes the catalog cost.
+- `PriorityBundle` and `PriorityCord` stay hidden until the rule is owned. The selected one uses the emphasized button style. The workshop body says the rule is on and names the priority. Start bundle and Start cord stay available for a hand start.
 
 ## Scene nodes
 
@@ -170,8 +181,9 @@ Keys:
 - `orders` (`intro_bundle` and `lane_cord` are `open` or `done`). Missing, `{}`, or a known order omitted from the dict loads that order as `open`.
 - `upgrades` (bool flags, `barn_loft` and `shuttle_rack`). Missing or `{}` means nothing is owned.
 - `staff` (`hired` is an array of catalog ids, `workshop` is `""` or one of those ids). Missing or `{}` means nobody is hired and the bench is unassigned.
+- `research` (`loom_rule` is true when owned, `priority` is `""`, `bundle_fiber`, or `twist_cord`). Missing or `{}` means the rule is locked and the priority is empty. A priority without the unlock, or any other recipe id, is rejected.
 
-A plot stage outside `0..3`, a bad grade, an unknown order id, a non-bool upgrade value, an unknown worker id, a duplicate hire, or a workshop id that was not hired is rejected. Schema `2` is still rejected. Old schema-1 files that omit `plot`, `orders`, `upgrades`, or `staff` still load. A file that only stored `intro_bundle` gains `lane_cord` as `open`.
+A plot stage outside `0..3`, a bad grade, an unknown order id, a non-bool upgrade value, an unknown worker id, a duplicate hire, a workshop id that was not hired, an unknown research id, or a priority that is not a loom recipe is rejected. Schema `2` is still rejected. Old schema-1 files that omit `plot`, `orders`, `upgrades`, `staff`, or `research` still load. A file that only stored `intro_bundle` gains `lane_cord` as `open`.
 
 `create_new` requires a non-empty name of at most 32 characters and a catalog region. Starting funds are `RegionCatalog.PURSE - property_cost` (purse `500`, untuned). The file also stores 4 common Verdant Fiber so the inventory snapshot is real. That stack is not a grow recipe.
 

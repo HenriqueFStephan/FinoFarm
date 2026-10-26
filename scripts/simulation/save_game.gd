@@ -38,6 +38,7 @@ var plot: Dictionary = {
 var orders: Dictionary = {"intro_bundle": "open", "lane_cord": "open"}
 var upgrades: Dictionary = {}
 var staff: Dictionary = {"hired": [], "workshop": ""}
+var research: Dictionary = {"priority": ""}
 
 
 static func create_new(farm_name: String, region_id: String) -> Dictionary:
@@ -84,6 +85,7 @@ func to_dict() -> Dictionary:
 		"orders": orders.duplicate(true),
 		"upgrades": upgrades.duplicate(true),
 		"staff": staff.duplicate(true),
+		"research": research.duplicate(true),
 	}
 
 
@@ -128,6 +130,9 @@ static func from_dict(data: Dictionary) -> Dictionary:
 	var staff_value: Variant = _staff_from(data.get("staff", {}))
 	if staff_value == null:
 		return _fail("bad_staff")
+	var research_value: Variant = _research_from(data.get("research", {}))
+	if research_value == null:
+		return _fail("bad_research")
 	var game := SaveGame.new()
 	game.schema = SCHEMA
 	game.farm_id = str(data["farm_id"])
@@ -146,6 +151,7 @@ static func from_dict(data: Dictionary) -> Dictionary:
 	game.orders = (orders_value as Dictionary).duplicate(true)
 	game.upgrades = (upgrades_value as Dictionary).duplicate(true)
 	game.staff = (staff_value as Dictionary).duplicate(true)
+	game.research = (research_value as Dictionary).duplicate(true)
 	return {"ok": true, "error": "", "game": game}
 
 
@@ -338,6 +344,37 @@ static func _upgrades_from(value: Variant) -> Variant:
 			return null
 		if bool(raw[key]):
 			cleaned[upgrade_id] = true
+	return cleaned
+
+
+static func _research_from(value: Variant) -> Variant:
+	if typeof(value) != TYPE_DICTIONARY:
+		return null
+	var raw: Dictionary = value
+	if raw.is_empty():
+		return {"priority": ""}
+	var cleaned := {"priority": ""}
+	var owns_rule := false
+	for key in raw.keys():
+		var research_id := str(key)
+		if research_id == "priority":
+			if typeof(raw[key]) != TYPE_STRING:
+				return null
+			var choice := str(raw[key])
+			if choice != "" and not ResourceCatalog.is_loom_priority(choice):
+				return null
+			cleaned["priority"] = choice
+			continue
+		if ResourceCatalog.research(research_id).is_empty():
+			return null
+		if typeof(raw[key]) != TYPE_BOOL:
+			return null
+		if bool(raw[key]):
+			cleaned[research_id] = true
+			if research_id == "loom_rule":
+				owns_rule = true
+	if str(cleaned["priority"]) != "" and not owns_rule:
+		return null
 	return cleaned
 
 

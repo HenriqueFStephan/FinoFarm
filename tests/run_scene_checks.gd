@@ -109,6 +109,11 @@ func _farm() -> String:
 		return "no crew button"
 	if crew_button.visible:
 		return "crew visible during the lesson"
+	var research_button := farm.get_node_or_null("Hud/HudRoot/ActionColumn/ResearchButton") as Button
+	if research_button == null:
+		return "no research button"
+	if research_button.visible:
+		return "research visible during the lesson"
 	var marker: Node3D = farm.get_node("PlaceholderPlotMarker")
 	if not marker.visible:
 		return "saved marker hidden"
@@ -240,6 +245,39 @@ func _economy(farm) -> String:
 	var paced := session.loop.job_ticks("bundle_fiber")
 	if paced != WorkerPace.job_ticks("bundle_fiber", StaffCatalog.worker("alex_morgan"), 1):
 		return "rack pace %d" % paced
+	var research_button := session.get_node("Hud/HudRoot/ActionColumn/ResearchButton") as Button
+	if not research_button.visible:
+		return "research hidden after the lesson"
+	var priority_bundle := session.get_node_or_null("Hud/HudRoot/WorkshopPanel/Box/PriorityRow/PriorityBundle") as Button
+	var priority_cord := session.get_node_or_null("Hud/HudRoot/WorkshopPanel/Box/PriorityRow/PriorityCord") as Button
+	if priority_bundle == null or priority_cord == null:
+		return "priority controls"
+	if priority_bundle.visible or priority_cord.visible:
+		return "priority visible before the unlock"
+	var before_funds := session.game.funds
+	if session.buy_loom_rule() != "":
+		return "loom rule"
+	if session.game.funds != before_funds - int(ResourceCatalog.research("loom_rule")["cost"]):
+		return "rule funds %d" % session.game.funds
+	if research_button.visible:
+		return "research button stayed"
+	session.hud.open_workshop(true)
+	session.refresh_presentation()
+	if not priority_bundle.visible or not priority_cord.visible:
+		return "priority hidden"
+	var body := session.get_node("Hud/HudRoot/WorkshopPanel/Box/WorkshopBody") as Label
+	if not body.text.contains("Loom rule is on"):
+		return "rule copy %s" % body.text
+	var recipe := session.loop.workshop.active_recipe_id
+	var ticks := session.loop.workshop.ticks_remaining
+	if session.set_loom_priority("twist_cord") != "":
+		return "set priority"
+	if session.loop.workshop.active_recipe_id != recipe or session.loop.workshop.ticks_remaining != ticks:
+		return "priority replaced the job"
+	if session.loop.research.priority != "twist_cord":
+		return "priority not stored"
+	if not body.text.contains("Priority: Fiber Cord."):
+		return "priority label %s" % body.text
 	return ""
 
 

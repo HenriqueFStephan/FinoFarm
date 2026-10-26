@@ -20,7 +20,8 @@ The script prints `godot <version>`, then:
 7. `godot --headless --path . -s res://tests/run_economy_tests.gd`
 8. `godot --headless --path . -s res://tests/run_staff_tests.gd`
 9. `godot --headless --path . -s res://tests/run_priority_tests.gd`
-10. `godot --headless --path . -s res://tests/run_scene_checks.gd`
+10. `godot --headless --path . -s res://tests/run_automation_tests.gd`
+11. `godot --headless --path . -s res://tests/run_scene_checks.gd`
 
 Exit code is the Godot exit code. `set -e` stops on the first failure.
 
@@ -76,6 +77,18 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 - Alex and Bram still finish a bundle on different ticks. The cord uses the same attribute rule.
 - The cord and the rack stay locked until Mara's lesson is done. Schema stays `1`. A save that only stored the intro order loads the cord order as open.
 
+## What the automation tests cover
+
+`tests/run_automation_tests.gd` does not load the farm scene.
+
+- `loom_rule` costs 120. A purse of 119 does not unlock it. A second buy does not charge again. The buy is refused during Mara's lesson.
+- A Fiber Bundle priority starts `bundle_fiber`. A Fiber Cord priority starts `twist_cord`. Both require the unlock, a ready plot, and an assigned worker.
+- Changing priority while a job is running leaves that recipe and its remaining ticks. After the job finishes, the next ready plot follows the new priority.
+- Without the unlock, the player still harvests and starts by hand. With nobody assigned, the rule does not harvest.
+- Forcing the unlock during the lesson does not start the loom. The harvest and the bundle button still advance Mara's steps.
+- Alex's automatic bundle still finishes before Bram's. One automatic harvest still cannot pay both orders.
+- A schema-1 file with no `research` key loads locked. Schema stays `1`.
+
 ## What the scene checks cover
 
 `tests/run_scene_checks.gd` loads scenes after the tree is up (`call_deferred`, because `_initialize` runs too early).
@@ -90,6 +103,7 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 - The workshop, crop, and loft nodes exist. The loft starts hidden. The crop mesh follows the stage name. The loom does not move while idle and does move while operating.
 - `play_intro_cycle` on that farm changes funds by `+180 - 400`, shows the loft, and leaves the order delivered.
 - Crew is hidden on the opening step. After the lesson, hiring Alex and assigning them shows `WorkshopWorker`, and starting the loom plays `work`.
+- `ResearchButton` is hidden during the lesson. After the lesson it is shown, the purchase hides it, and the priority buttons appear. Setting a cord priority does not replace the bundle already on the loom.
 
 `tests/run_region_tests.gd`, `tests/run_save_load_tests.gd`, and `tests/run_placement_tests.gd` do not instance a 3D scene. The save tests use a throwaway `user://` directory.
 

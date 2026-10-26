@@ -10,7 +10,7 @@ Commit `1d862f4` on `main` contained only:
 
 There was no Godot project, no scene, no asset, and no design doc in the repo. That tree cannot run a stylized 3D game. It can install the tools a Godot game needs. Those bootstrap files stay. This document describes the project added on top of them.
 
-The repo hosts a Godot 4 game: it imports, the menu loads a farm, and simulation code runs without a renderer. Saves, region data, one barn model, one rigged character, one textile loop (grow, bundle, sell, buy a loft), a two-person crew, a second fiber good, and a shuttle-rack speed upgrade are in. It still cannot host the commercial game. The terrain, crop, workshop, loft, and shuttle rack are still placeholders. The loom worker reuses the farmhand mesh.
+The repo hosts a Godot 4 game: it imports, the menu loads a farm, and simulation code runs without a renderer. Saves, region data, one barn model, one rigged character, one textile loop (grow, bundle, sell, buy a loft), a two-person crew, a second fiber good, a shuttle-rack speed upgrade, and one paid loom rule are in. It still cannot host the commercial game. The terrain, crop, workshop, loft, and shuttle rack are still placeholders. The loom worker reuses the farmhand mesh. The loom rule is a priority, not a new building.
 
 ## ADR-001 — Godot 4.7 standard, Compatibility renderer
 
@@ -56,6 +56,7 @@ tests/run_placement_tests.gd
 tests/run_economy_tests.gd
 tests/run_staff_tests.gd
 tests/run_priority_tests.gd
+tests/run_automation_tests.gd
 tests/run_scene_checks.gd
 tools/validate.sh
 tools/capture_farm.gd

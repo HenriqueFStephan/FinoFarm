@@ -12,6 +12,7 @@ var orders: OrderBoard
 var upgrades: UpgradeShop
 var tutorial: TutorialTrack
 var roster: StaffRoster
+var research: ResearchBoard
 var last_event := ""
 
 
@@ -26,6 +27,7 @@ func _init() -> void:
 	upgrades = UpgradeShop.new()
 	tutorial = TutorialTrack.new()
 	roster = StaffRoster.new()
+	research = ResearchBoard.new()
 
 
 func read_from(game: SaveGame) -> String:
@@ -36,6 +38,7 @@ func read_from(game: SaveGame) -> String:
 	orders.import_state(game.orders)
 	upgrades.import_state(game.upgrades)
 	roster.import_state(game.staff)
+	research.import_state(game.research)
 	tutorial.step = clampi(game.tutorial_step, 0, TutorialTrack.DONE)
 	return ""
 
@@ -47,6 +50,7 @@ func write_to(game: SaveGame) -> void:
 	game.orders = orders.export_state()
 	game.upgrades = upgrades.export_state()
 	game.staff = roster.export_state()
+	game.research = research.export_state()
 	game.tutorial_step = tutorial.step
 
 
@@ -56,17 +60,17 @@ func advance(delta_seconds: float) -> void:
 	if not was_ready and plot.is_ready():
 		tutorial.notify("ready")
 		last_event = "The fiber plot is ready."
-	if produced.is_empty():
-		return
-	var output_id := str(produced.get("id", ""))
-	if output_id == "fiber_bundle":
-		tutorial.notify("bundled")
-		last_event = "The workshop finished a Fiber Bundle."
-	elif ResourceCatalog.resources().has(output_id):
-		var label := str(ResourceCatalog.resources()[output_id]["label"])
-		last_event = "The workshop finished a %s." % label
-	else:
-		last_event = "The workshop finished."
+	if not produced.is_empty():
+		var output_id := str(produced.get("id", ""))
+		if output_id == "fiber_bundle":
+			tutorial.notify("bundled")
+			last_event = "The workshop finished a Fiber Bundle."
+		elif ResourceCatalog.resources().has(output_id):
+			var label := str(ResourceCatalog.resources()[output_id]["label"])
+			last_event = "The workshop finished a %s." % label
+		else:
+			last_event = "The workshop finished."
+	apply_loom_rule()
 
 
 func plant_if_needed() -> String:
@@ -251,6 +255,84 @@ func _speed_bonus() -> int:
 	if not upgrades.owns("shuttle_rack"):
 		return 0
 	return int(ResourceCatalog.upgrade("shuttle_rack").get("speed_ticks", 0))
+
+
+func buy_loom_rule(game: SaveGame) -> String:
+	if tutorial.step < TutorialTrack.DONE:
+		last_event = "Follow Mara's step before buying the loom rule."
+		return "tutorial"
+	var before := game.funds
+	var result := research.try_purchase("loom_rule", game.funds)
+	var err := str(result["error"])
+	if err != "":
+		if err == "short_funds":
+			last_event = "Not enough funds for the loom rule."
+		elif err == "already_owned":
+			last_event = "The loom rule is already unlocked."
+		else:
+			last_event = err
+		return err
+	game.funds = int(result["funds"])
+	var spec := ResourceCatalog.research("loom_rule")
+	last_event = "Loom rule unlocked for %d. Funds %d." % [int(spec["cost"]), game.funds]
+	if game.funds != before - int(spec["cost"]):
+		last_event = "Loom rule unlocked for %d." % int(spec["cost"])
+	return ""
+
+
+func set_loom_priority(recipe_id: String) -> String:
+	if tutorial.step < TutorialTrack.DONE:
+		last_event = "Finish Mara's lesson before setting a loom priority."
+		return "tutorial"
+	var err := research.set_priority(recipe_id)
+	if err == "locked":
+		last_event = "Buy the loom rule before setting a priority."
+		return err
+	if err != "":
+		last_event = "That is not a loom priority."
+		return err
+	var started := apply_loom_rule()
+	if started == "":
+		return ""
+	var label := _priority_label(recipe_id)
+	if started == "busy":
+		last_event = "Priority is %s. The running job stays." % label
+	else:
+		last_event = "Priority is %s." % label
+	return ""
+
+
+## Starts the chosen recipe only when the unlock, a worker, and a ready plot all line up.
+## A busy loom is left alone. Mara's lesson never reaches this start.
+func apply_loom_rule() -> String:
+	if tutorial.step < TutorialTrack.DONE:
+		return "tutorial"
+	if not research.owns("loom_rule"):
+		return "locked"
+	if roster.assigned_worker().is_empty():
+		return "unassigned"
+	if not ResourceCatalog.is_loom_priority(research.priority):
+		return "no_priority"
+	if workshop.is_busy():
+		return "busy"
+	if not plot.is_ready():
+		return "not_ready"
+	var err := harvest()
+	if err != "":
+		return err
+	err = _start_recipe(research.priority)
+	if err == "":
+		var label := _priority_label(research.priority)
+		last_event = "The plot was ready. The loom rule started a %s." % label
+	return err
+
+
+func _priority_label(recipe_id: String) -> String:
+	var recipe := ResourceCatalog.recipe(recipe_id)
+	if recipe.is_empty():
+		return recipe_id
+	var output_id := str(recipe["output_id"])
+	return str(ResourceCatalog.resources()[output_id]["label"])
 
 
 func hire_worker(worker_id: String) -> String:
