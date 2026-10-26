@@ -23,6 +23,15 @@ done < <(find scripts tests tools -name '*.gd' | sort)
 echo "simulation"
 godot --headless --path . -s res://tests/run_simulation_tests.gd
 
+echo "regions"
+godot --headless --path . -s res://tests/run_region_tests.gd
+
+echo "save"
+godot --headless --path . -s res://tests/run_save_load_tests.gd
+
+echo "placement"
+godot --headless --path . -s res://tests/run_placement_tests.gd
+
 echo "scene"
 godot --headless --path . -s res://tests/run_scene_checks.gd
 

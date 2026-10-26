@@ -10,7 +10,7 @@ Commit `1d862f4` on `main` contained only:
 
 There was no Godot project, no scene, no asset, and no design doc in the repo. That tree cannot run a stylized 3D game. It can install the tools a Godot game needs. Those bootstrap files stay. This document describes the project added on top of them.
 
-After this change, the repo can host a Godot 4 game: it imports, the main scene loads, and simulation code runs without a renderer. It still cannot host the commercial game. There is no save system, no content pipeline beyond primitives, and no UI flow.
+The repo hosts a Godot 4 game: it imports, the menu loads a farm, and simulation code runs without a renderer. Saves, region data, one barn model, and one rigged character are in. It still cannot host the commercial game. There is no order loop, no hiring, and the terrain is still a placeholder shader.
 
 ## ADR-001 — Godot 4.7 standard, Compatibility renderer
 
@@ -36,36 +36,50 @@ Tick length is 1000 ms inside `SimClock`. `advance` rounds seconds to millisecon
 
 ```
 project.godot
+scenes/menu/main_menu.tscn
 scenes/farm/first_farm.tscn
+scenes/farm/farm_stage.tscn
+scenes/buildings/barn.tscn
+scenes/characters/farmhand.tscn
 scripts/camera/farm_camera.gd
-scripts/characters/placeholder_walker.gd
+scripts/characters/farmhand.gd
+scripts/farm/farm_session.gd
+scripts/ui/
 scripts/simulation/
 tests/run_simulation_tests.gd
+tests/run_region_tests.gd
+tests/run_save_load_tests.gd
+tests/run_placement_tests.gd
 tests/run_scene_checks.gd
 tools/validate.sh
 tools/capture_farm.gd
+tools/blender/barn.py
+tools/blender/farmhand.py
+assets/models/barn.glb
+assets/models/farmhand.glb
 assets/shaders/placeholder_terrain.gdshader
 ```
 
-Main scene is `res://scenes/farm/first_farm.tscn`. Import cache (`.godot/`) is gitignored. `*.uid` and `icon.svg.import` are committed so Godot keeps resource ids.
+Main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is still `first_farm.tscn`. Import cache (`.godot/`) is gitignored. `*.uid` and `*.import` files are committed so Godot keeps resource ids. `*.glb` is Git LFS.
 
 Autoloads: none. Add one only when two systems need a shared object and a direct reference is awkward. Do not add an autoload for the workshop ahead of the screen that uses it.
 
 ## Scene contract
 
-`FirstFarm` children that other tasks may rely on:
+`FirstFarm` instances `FarmStage`. Nodes other tasks may rely on:
 
-- `PlaceholderTerrain`
-- `PlaceholderBarn` with `Walls`, `Roof`, `Door`
-- `PlaceholderWalker` (script `advance(delta)`)
-- `FarmCamera` (script `orbit`, `zoom_by`, `pan_keys`, `pan_screen`)
-- `Hud/Hint` for the control line
+- `Stage/PlaceholderTerrain`
+- `Stage/Barn` (glTF instance, not a primitive)
+- `Stage/Farmhand` (script `advance(delta)`, clips `idle` and `walk`)
+- `Stage/FarmCamera` (script `orbit`, `zoom_by`, `pan_keys`, `pan_screen`)
+- `Hud` labels bound from the save
+- `PlaceholderPlotMarker`
 
 Renaming these is an interface change. Update `tests/run_scene_checks.gd` and [interface contracts](interface-contracts.md) in the same commit.
 
 ## Persistence
 
-Not implemented. Milestone 1 task FF-12 adds schema version 1. Until that lands, do not write save files from experimental scripts.
+`FarmLibrary` stores one JSON file per farm under `user://saves`, schema 1. The menu writes a farm, sets it active, and the farm scene loads that id. Direct launches with no active save stay in memory and do not create a file. See the save section of [interface contracts](interface-contracts.md).
 
 ## Performance
 

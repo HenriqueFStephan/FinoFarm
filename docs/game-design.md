@@ -31,13 +31,14 @@ One tick is one simulated second. Splitting that second across frames does not c
 
 ## What this build lets the player do
 
-Launch Godot and look at the first farm.
+Launch Godot. The main menu sits on a 3D farm. New Game asks for a name and one of the four regions, writes a schema-1 save, and opens that farm. My Farms lists every save. Continue is available once a save exists.
 
-- Pan, zoom, and orbit a three-quarter camera.
-- See terrain, a dirt loop, one building, three trees, and a character.
-- The character walks the loop and swings their limbs while moving.
+- Pan, zoom, and orbit the same three-quarter camera.
+- See terrain, a dirt loop, one barn, three trees, and a farmhand whose walk clip plays while they move.
+- Place, move, and remove one plot marker on the grid. Clicking the barn selects it.
+- The HUD shows the farm name, region, and funds from the save.
 
-There is no menu, save, currency, placement, or hiring yet. Those are Milestone 1 and later. See [the vertical slice](vertical-slice-m1.md).
+Hiring, orders, and the workshop screen are still later milestones. See [the vertical slice](vertical-slice-m1.md). The workshop classes stay headless.
 
 ## Camera
 

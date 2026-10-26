@@ -2,15 +2,18 @@
 
 Stub. Add a row before a new source file is used in a scene. Status `placeholder` means it is not final art, even if it is on screen.
 
-No third-party model, texture, audio, or font is imported. Everything below was authored in this repo as engine primitives or a shader.
+No third-party model, texture, audio, or font is imported. The barn and the farmhand were generated in Blender for this project. Terrain, trees, the plot marker, and the selection ring are still engine primitives or a shader.
 
 | Id | Scene node | Source | Export | Author | License | Materials | Polys | Animation | Scenes | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `terrain.placeholder` | `PlaceholderTerrain` | `assets/shaders/placeholder_terrain.gdshader` on a 48×48 subdivided `PlaneMesh` | n/a | in-engine shader | project original | shader albedo, no textures | generated | none | `first_farm.tscn` | placeholder |
-| `barn.placeholder` | `PlaceholderBarn` | boxes and one `PrismMesh` inside the scene | n/a | in-engine primitives | project original | flat `StandardMaterial3D` | primitive | none | `first_farm.tscn` | placeholder |
-| `tree.placeholder` | `PlaceholderTreeA/B/C` | cylinder and sphere in the scene | n/a | in-engine primitives | project original | flat colors | primitive | none | `first_farm.tscn` | placeholder |
-| `walker.placeholder` | `PlaceholderWalker` | boxes, sphere, scale 1.25 | n/a | in-engine primitives | project original | flat colors | primitive | procedural limb swing in `placeholder_walker.gd`, not a clip | `first_farm.tscn` | placeholder |
+| `terrain.placeholder` | `PlaceholderTerrain` | `assets/shaders/placeholder_terrain.gdshader` on a 48×48 subdivided `PlaneMesh` | n/a | in-engine shader | project original | shader albedo, no textures | generated | none | `farm_stage.tscn` | placeholder |
+| `building.barn.v1` | `Barn` | `tools/blender/barn.py` | `assets/models/barn.glb` | Blender script in this repo | project original, commercial use allowed | flat principled colors, no textures | 1294 tris | none | `scenes/buildings/barn.tscn` | in-engine |
+| `tree.placeholder` | `PlaceholderTreeA/B/C` | cylinder and sphere in the scene | n/a | in-engine primitives | project original | flat colors | primitive | none | `farm_stage.tscn` | placeholder |
+| `character.farmhand.v1` | `Farmhand` | `tools/blender/farmhand.py` | `assets/models/farmhand.glb` | Blender script in this repo | project original, commercial use allowed | flat principled colors, no textures | 10340 tris | skeleton `Armature`, clips `idle` and `walk`, in-place | `scenes/characters/farmhand.tscn` | in-engine |
+| `marker.placeholder` | `PlaceholderPlotMarker` | cylinder and box in `scenes/props/plot_marker.tscn` | n/a | in-engine primitives | project original | flat colors | primitive | none | `first_farm.tscn` | placeholder |
 | `icon.game` | project icon | `icon.svg` | svg | in-repo vector | project original | flat fills | n/a | none | project settings | block-out icon, not marketing art |
+
+External source URL for both glTF files: none. The box barn and the sine-wave walker are no longer instanced. `in-engine` means Godot imports the glTF and a scene instances it. It does not mean art-director acceptance.
 
 Polygon counts are omitted for primitives because Godot generates them and they are not an art budget.
 

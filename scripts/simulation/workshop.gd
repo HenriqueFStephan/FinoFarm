@@ -65,3 +65,17 @@ func tick(count: int = 1) -> Dictionary:
 
 func is_busy() -> bool:
 	return active_recipe_id != ""
+
+
+func export_job() -> Dictionary:
+	return {
+		"recipe_id": active_recipe_id,
+		"ticks_remaining": ticks_remaining,
+		"locked_grade": locked_grade,
+	}
+
+
+func import_job(data: Dictionary) -> void:
+	active_recipe_id = str(data.get("recipe_id", ""))
+	ticks_remaining = int(data.get("ticks_remaining", 0))
+	locked_grade = int(data.get("locked_grade", 0))
