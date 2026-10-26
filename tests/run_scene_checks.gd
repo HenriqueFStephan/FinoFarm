@@ -61,6 +61,7 @@ func _farm() -> String:
 		"PlaceholderCrop",
 		"PlaceholderWorkshop",
 		"PlaceholderBarnLoft",
+		"PlaceholderShuttleRack",
 		"WorkshopWorker",
 		"Hud",
 	]:
@@ -177,6 +178,9 @@ func _economy(farm) -> String:
 	var loft := session.get_node("PlaceholderBarnLoft") as Node3D
 	if loft.visible:
 		return "loft starts visible"
+	var rack := session.get_node("PlaceholderShuttleRack") as Node3D
+	if rack.visible:
+		return "rack starts visible"
 	var crop := session.get_node("PlaceholderCrop") as CropVisual
 	session.loop.plot.plant()
 	session.refresh_presentation()
@@ -221,7 +225,22 @@ func _economy(farm) -> String:
 	var order_body := session.get_node("Hud/HudRoot/OrderPanel/Box/OrderBody") as Label
 	if not order_body.text.contains("Delivered"):
 		return "order %s" % order_body.text
-	return _crew(session)
+	if not order_body.text.contains("Lane counter cord"):
+		return "cord order %s" % order_body.text
+	var inventory_label := session.get_node("Hud/HudRoot/InventoryLabel") as Label
+	if not inventory_label.text.contains("Fiber Bundle") or not inventory_label.text.contains("Fiber Cord"):
+		return "inventory %s" % inventory_label.text
+	var crew_reason := _crew(session)
+	if crew_reason != "":
+		return crew_reason
+	if session.buy_shuttle() != "":
+		return "shuttle buy"
+	if not rack.visible:
+		return "rack hidden after purchase"
+	var paced := session.loop.job_ticks("bundle_fiber")
+	if paced != WorkerPace.job_ticks("bundle_fiber", StaffCatalog.worker("alex_morgan"), 1):
+		return "rack pace %d" % paced
+	return ""
 
 
 func _crew(session: FarmSession) -> String:

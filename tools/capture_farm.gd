@@ -8,6 +8,7 @@ func _initialize() -> void:
 	var menu := false
 	var cycle := false
 	var crew := false
+	var priority := false
 	for arg in OS.get_cmdline_user_args():
 		if str(arg).begins_with("--output="):
 			output = str(arg).trim_prefix("--output=")
@@ -17,6 +18,8 @@ func _initialize() -> void:
 			cycle = true
 		elif str(arg) == "--crew":
 			crew = true
+		elif str(arg) == "--priority":
+			priority = true
 	if menu:
 		var menu_scene: PackedScene = load("res://scenes/menu/main_menu.tscn")
 		if menu_scene == null:
@@ -42,6 +45,8 @@ func _initialize() -> void:
 	root.add_child(farm)
 	if crew:
 		call_deferred("_capture_crew", farm, output)
+	elif priority:
+		call_deferred("_capture_priority", farm, output)
 	elif cycle:
 		call_deferred("_capture_cycle", farm, output)
 	else:
@@ -125,6 +130,70 @@ func _capture_crew(farm: Node, output: String) -> void:
 	view.pitch = 0.46
 	view.distance = 8.0
 	view.orbit(0.0, 0.0)
+	await _capture_view(output)
+
+
+func _capture_priority(farm: Node, output: String) -> void:
+	for _frame in 4:
+		await process_frame
+	var session := farm as FarmSession
+	var starter := session.loop.inventory.amount("verdant_fiber", GradeScale.COMMON)
+	if starter > 0 and not session.loop.inventory.remove("verdant_fiber", GradeScale.COMMON, starter):
+		push_error("starter fiber")
+		quit(4)
+		return
+	var err := session.place_marker_at(4.0, 6.0)
+	if err != "":
+		push_error(err)
+		quit(4)
+		return
+	session.loop.advance(6.0)
+	if not session.loop.plot.is_ready():
+		push_error("not ready")
+		quit(4)
+		return
+	if session.harvest_plot() != "" or session.start_workshop() != "":
+		push_error("harvest or bundle")
+		quit(4)
+		return
+	session.loop.advance(4.0)
+	if session.loop.inventory.amount("fiber_bundle", GradeScale.COMMON) != 1:
+		push_error("bundle missing")
+		quit(4)
+		return
+	if session.loop.inventory.amount("fiber_cord", GradeScale.COMMON) != 0:
+		push_error("cord appeared")
+		quit(4)
+		return
+	if session.loop.tutorial.step != TutorialTrack.ORDER:
+		push_error("step %d" % session.loop.tutorial.step)
+		quit(4)
+		return
+	session.set_process(false)
+	session.hud.open_orders(true)
+	session.hud.order_panel.position = Vector2(16, 188)
+	var hint := session.hud.get_node_or_null("HudRoot/Hint") as CanvasItem
+	if hint != null:
+		hint.visible = false
+	session.refresh_presentation()
+	if session.hud.order_deliver.disabled or not session.hud.order_deliver_cord.disabled:
+		push_error("deliver buttons")
+		quit(4)
+		return
+	var view := session.get_node("Stage/FarmCamera") as Camera3D
+	view.focus = Vector3(4.6, 1.3, 3.4)
+	view.yaw = 0.42
+	view.pitch = 0.5
+	view.distance = 15.5
+	view.orbit(0.0, 0.0)
+	var walker = session.get_node("Stage/Farmhand")
+	walker.set_process(false)
+	walker.global_position = Vector3(-1.2, 0.0, -4.4)
+	var anim: AnimationPlayer = walker.animation_player()
+	if anim != null and anim.has_animation("walk"):
+		anim.play("walk")
+		anim.seek(0.25, true)
+		anim.pause()
 	await _capture_view(output)
 
 

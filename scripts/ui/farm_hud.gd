@@ -5,8 +5,10 @@ signal remove_pressed
 signal harvest_pressed
 signal workshop_pressed
 signal workshop_start_pressed
+signal workshop_cord_pressed
 signal orders_pressed
 signal order_deliver_pressed
+signal order_deliver_cord_pressed
 signal upgrade_pressed
 signal crew_pressed
 signal hire_requested(worker_id: String)
@@ -27,9 +29,11 @@ var upgrade_button: Button
 var workshop_panel: PanelContainer
 var workshop_body: Label
 var workshop_start: Button
+var workshop_cord: Button
 var order_panel: PanelContainer
 var order_body: Label
 var order_deliver: Button
+var order_deliver_cord: Button
 var crew_button: Button
 var crew_panel: PanelContainer
 var workshop_open := false
@@ -137,17 +141,21 @@ func _ready() -> void:
 	workshop_panel.get_node("Box").add_child(workshop_row)
 	workshop_start = _action(workshop_row, "WorkshopStart", "Start bundle")
 	workshop_start.pressed.connect(func() -> void: workshop_start_pressed.emit())
+	workshop_cord = _action(workshop_row, "WorkshopCord", "Start cord")
+	workshop_cord.pressed.connect(func() -> void: workshop_cord_pressed.emit())
 	var workshop_close := _action(workshop_row, "WorkshopClose", "Close")
 	workshop_close.pressed.connect(func() -> void: _set_workshop_open(false))
 
 	order_panel = _card(root, "OrderPanel", Vector2(430, 300))
 	_card_title(order_panel, "OrderTitle", "Order board")
 	order_body = _card_body(order_panel, "OrderBody")
-	var order_row := HBoxContainer.new()
+	var order_row := VBoxContainer.new()
 	order_row.add_theme_constant_override("separation", 8)
 	order_panel.get_node("Box").add_child(order_row)
-	order_deliver = _action(order_row, "OrderDeliver", "Deliver")
+	order_deliver = _action(order_row, "OrderDeliver", "Deliver bundle")
 	order_deliver.pressed.connect(func() -> void: order_deliver_pressed.emit())
+	order_deliver_cord = _action(order_row, "OrderDeliverCord", "Deliver cord")
+	order_deliver_cord.pressed.connect(func() -> void: order_deliver_cord_pressed.emit())
 	var order_close := _action(order_row, "OrderClose", "Close")
 	order_close.pressed.connect(func() -> void: _set_orders_open(false))
 
@@ -162,7 +170,7 @@ func _ready() -> void:
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", 15)
-	hint.text = "Left-click open ground to place the fiber plot. Click the workshop shed to bundle. X removes the plot. Esc saves and returns.\nAfter Mara's lesson, Crew hires a worker for the loom. Right-drag or Q/E orbit. Middle-drag or WASD pan. Wheel or +/- zoom."
+	hint.text = "Left-click open ground to place the fiber plot. Click the workshop shed to bundle. X removes the plot. Esc saves and returns.\nAfter Mara's lesson, choose a Fiber Bundle or a Fiber Cord. One harvest cannot fill both orders. Crew hires a worker. Right-drag or Q/E orbit. Middle-drag or WASD pan. Wheel or +/- zoom."
 	root.add_child(hint)
 
 
@@ -183,11 +191,22 @@ func refresh(game: SaveGame, loop: FarmLoop, barn_selected: bool) -> void:
 	harvest_button.visible = ready and loop.tutorial.allows("harvest")
 	workshop_button.visible = step >= TutorialTrack.WORKSHOP
 	orders_button.visible = step >= TutorialTrack.ORDER
-	upgrade_button.visible = step >= TutorialTrack.UPGRADE and not loop.upgrades.owns("barn_loft")
+	var loft_open := step >= TutorialTrack.UPGRADE and not loop.upgrades.owns("barn_loft")
+	var rack_open := (
+		step >= TutorialTrack.DONE
+		and loop.upgrades.owns("barn_loft")
+		and not loop.upgrades.owns("shuttle_rack")
+	)
+	upgrade_button.visible = loft_open or rack_open
+	if rack_open:
+		var rack_cost := int(ResourceCatalog.upgrade("shuttle_rack")["cost"])
+		upgrade_button.text = "Buy shuttle rack (%d)" % rack_cost
+	else:
+		upgrade_button.text = "Buy barn loft"
 	_style_button(harvest_button, step == TutorialTrack.HARVEST)
 	_style_button(workshop_button, step == TutorialTrack.WORKSHOP or step == TutorialTrack.BUNDLE)
 	_style_button(orders_button, step == TutorialTrack.ORDER)
-	_style_button(upgrade_button, step == TutorialTrack.UPGRADE)
+	_style_button(upgrade_button, step == TutorialTrack.UPGRADE or rack_open)
 	crew_button.visible = step >= TutorialTrack.DONE
 	_style_button(crew_button, step >= TutorialTrack.DONE and loop.roster.workshop_worker_id == "")
 	_fill_crew(loop)
@@ -244,32 +263,74 @@ func _set_orders_open(open: bool) -> void:
 
 
 func _fill_workshop(loop: FarmLoop) -> void:
-	var pace := WorkerPace.bundle_ticks(loop.roster.assigned_worker())
-	var line := "Bundle 2 Verdant Fiber into 1 Fiber Bundle. %d ticks." % pace
+	var bundle_pace := loop.job_ticks("bundle_fiber")
+	var cord_pace := loop.job_ticks("twist_cord")
+	var line := "Choose one good. Both spend 2 Verdant Fiber.\nFiber Bundle: %d ticks. Fiber Cord: %d ticks." % [bundle_pace, cord_pace]
 	var person := loop.roster.assigned_worker()
 	if person.is_empty():
 		line += "\nNo one is assigned. The bench runs at the lesson pace."
 	else:
 		line += "\n%s is assigned." % str(person["name"])
+	if loop.upgrades.owns("shuttle_rack"):
+		line += "\nShuttle rack: the next job is one tick faster."
 	if loop.workshop.is_busy():
 		line += "\nRunning. %d ticks left." % loop.workshop.ticks_remaining
 	else:
 		line += "\nIdle."
+	if loop.tutorial.step < TutorialTrack.DONE:
+		line += "\nThe cord waits until Mara's lesson is done."
 	workshop_body.text = line
 	workshop_start.disabled = loop.workshop.is_busy() or not loop.tutorial.allows("workshop")
+	workshop_cord.disabled = loop.workshop.is_busy() or loop.tutorial.step < TutorialTrack.DONE
 
 
 func _fill_order(loop: FarmLoop) -> void:
-	var spec := ResourceCatalog.order("intro_bundle")
-	var state := str(loop.orders.status.get("intro_bundle", "open"))
-	var body := "%s\n%s\nReward %d." % [str(spec["label"]), str(spec["detail"]), int(spec["reward_funds"])]
-	if state == "done":
-		body += "\nDelivered."
-		order_deliver.disabled = true
-	else:
-		body += "\nOpen. Needs 1 Fiber Bundle."
-		order_deliver.disabled = not loop.tutorial.allows("order")
-	order_body.text = body
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("One harvest of Verdant Fiber covers one of these goods.")
+	for spec in ResourceCatalog.orders():
+		var order_id := str(spec["id"])
+		var state := str(loop.orders.status.get(order_id, "open"))
+		var requires: Array = spec["requires"]
+		var need_id := str(requires[0]["id"])
+		var need_label := str(ResourceCatalog.resources()[need_id]["label"])
+		var need_amount := int(requires[0]["amount"])
+		var block := "%s\n%s\nReward %d." % [str(spec["label"]), str(spec["detail"]), int(spec["reward_funds"])]
+		if state == "done":
+			block += "\nDelivered."
+		elif _order_ready(loop, order_id):
+			block += "\nOpen. Ready to deliver %d %s." % [need_amount, need_label]
+		else:
+			block += "\nOpen. Needs %d %s." % [need_amount, need_label]
+		lines.append(block)
+	lines.append("On hand: %s · %s" % [_good_count(loop, "fiber_bundle"), _good_count(loop, "fiber_cord")])
+	order_body.text = "\n\n".join(lines)
+	order_deliver.disabled = not _order_ready(loop, "intro_bundle")
+	order_deliver_cord.disabled = not _order_ready(loop, "lane_cord")
+
+
+func _order_ready(loop: FarmLoop, order_id: String) -> bool:
+	if str(loop.orders.status.get(order_id, "")) != "open":
+		return false
+	if order_id == "intro_bundle":
+		if not loop.tutorial.allows("order"):
+			return false
+	elif loop.tutorial.step < TutorialTrack.DONE:
+		return false
+	var spec := ResourceCatalog.order(order_id)
+	if spec.is_empty():
+		return false
+	for input in spec["requires"]:
+		if loop.inventory.lowest_grade_with(str(input["id"]), int(input["amount"])) == 0:
+			return false
+	return true
+
+
+func _good_count(loop: FarmLoop, resource_id: String) -> String:
+	var total := 0
+	for grade in [GradeScale.COMMON, GradeScale.FINE, GradeScale.SELECT]:
+		total += loop.inventory.amount(resource_id, grade)
+	var label := str(ResourceCatalog.resources()[resource_id]["label"])
+	return "%s %d" % [label, total]
 
 
 func _build_crew(root: Control) -> void:
@@ -471,7 +532,17 @@ func _style_button(button: Button, emphasized: bool) -> void:
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", normal)
 	button.add_theme_stylebox_override("pressed", normal)
-	button.add_theme_stylebox_override("disabled", normal)
+	var disabled := StyleBoxFlat.new()
+	disabled.bg_color = Color(0.72, 0.66, 0.56, 1)
+	disabled.corner_radius_top_left = 8
+	disabled.corner_radius_top_right = 8
+	disabled.corner_radius_bottom_left = 8
+	disabled.corner_radius_bottom_right = 8
+	disabled.content_margin_left = 12
+	disabled.content_margin_right = 12
+	disabled.content_margin_top = 6
+	disabled.content_margin_bottom = 6
+	button.add_theme_stylebox_override("disabled", disabled)
 	button.add_theme_color_override("font_color", Color(0.23, 0.14, 0.08))
 	button.add_theme_color_override("font_disabled_color", Color(0.35, 0.28, 0.2))
 	button.add_theme_font_size_override("font_size", 16)

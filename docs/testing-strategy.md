@@ -19,7 +19,8 @@ The script prints `godot <version>`, then:
 6. `godot --headless --path . -s res://tests/run_placement_tests.gd`
 7. `godot --headless --path . -s res://tests/run_economy_tests.gd`
 8. `godot --headless --path . -s res://tests/run_staff_tests.gd`
-9. `godot --headless --path . -s res://tests/run_scene_checks.gd`
+9. `godot --headless --path . -s res://tests/run_priority_tests.gd`
+10. `godot --headless --path . -s res://tests/run_scene_checks.gd`
 
 Exit code is the Godot exit code. `set -e` stops on the first failure.
 
@@ -62,6 +63,18 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 - Switching the assignee does not change ticks already on the loom. Hiring does not change funds.
 - Hired ids and the workshop assignee round-trip. A file without `staff` loads empty. Unknown ids, duplicates, and an assignee who was not hired are rejected.
 - Mara's eight prompt strings are unchanged.
+
+## What the priority tests cover
+
+`tests/run_priority_tests.gd` does not load the farm scene.
+
+- `twist_cord` spends the same Verdant Fiber harvest as `bundle_fiber`. The yield is smaller than the sum of the two input amounts.
+- `lane_cord` pays 240. `intro_bundle` still pays 180.
+- After one harvest is turned into a bundle, the cord order does not pay and the cord recipe does not start. The reverse is also true.
+- The inventory line names Fiber Bundle and Fiber Cord, including zero.
+- The shuttle rack costs 160, refuses 159, does not edit a running job, and shortens the next job by one tick.
+- Alex and Bram still finish a bundle on different ticks. The cord uses the same attribute rule.
+- The cord and the rack stay locked until Mara's lesson is done. Schema stays `1`. A save that only stored the intro order loads the cord order as open.
 
 ## What the scene checks cover
 

@@ -48,8 +48,9 @@ Interface surfaces, when UI arrives, use warm cream panels (`#F3E6C8` range) and
 | `PlaceholderCrop` | Disc, nub, stem, sphere, and an amber tuft. Swapped to match the plot stage. | placeholder |
 | `PlaceholderWorkshop` | Boxes for a shed, a cylinder loom arm, and a small shuttle. The arm spins only while the workshop job is busy. | placeholder |
 | `PlaceholderBarnLoft` | A box room, a box roof, and a teal window, shown after the loft is bought. | placeholder |
+| `PlaceholderShuttleRack` | A wood rail and two amber boxes on the shed roof, shown after the shuttle rack is bought. | placeholder |
 
-Do not describe the terrain, trees, marker, ring, crop, workshop, or loft as finished art. Do not describe the barn, the farmhand, or the workshop worker as an approved final asset. The worker is the farmhand mesh again, not a portrait of Alex or Bram. `work` is an in-place arm pass while the loom job is busy. Carry, celebrate, and rest clips are not in this build. The old box walker and its sine-wave swing are gone. The loom spin is a presentation of the busy flag, not a finished machine animation.
+Do not describe the terrain, trees, marker, ring, crop, workshop, loft, or shuttle rack as finished art. Do not describe the barn, the farmhand, or the workshop worker as an approved final asset. The worker is the farmhand mesh again, not a portrait of Alex or Bram. `work` is an in-place arm pass while the loom job is busy. Carry, celebrate, and rest clips are not in this build. The old box walker and its sine-wave swing are gone. The loom spin is a presentation of the busy flag, not a finished machine animation.
 
 ## Camera readability
 

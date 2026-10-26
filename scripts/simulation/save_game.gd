@@ -35,7 +35,7 @@ var plot: Dictionary = {
 	"ticks_remaining": 0,
 	"grade": 1,
 }
-var orders: Dictionary = {"intro_bundle": "open"}
+var orders: Dictionary = {"intro_bundle": "open", "lane_cord": "open"}
 var upgrades: Dictionary = {}
 var staff: Dictionary = {"hired": [], "workshop": ""}
 
@@ -302,7 +302,7 @@ static func _orders_from(value: Variant) -> Variant:
 		return null
 	var raw: Dictionary = value
 	if raw.is_empty():
-		return {"intro_bundle": "open"}
+		return _open_orders()
 	var cleaned := {}
 	for key in raw.keys():
 		var order_id := str(key)
@@ -312,9 +312,17 @@ static func _orders_from(value: Variant) -> Variant:
 		if state != "open" and state != "done":
 			return null
 		cleaned[order_id] = state
-	if not cleaned.has("intro_bundle"):
-		cleaned["intro_bundle"] = "open"
+	for order_id in _open_orders().keys():
+		if not cleaned.has(order_id):
+			cleaned[order_id] = "open"
 	return cleaned
+
+
+static func _open_orders() -> Dictionary:
+	var open := {}
+	for spec in ResourceCatalog.orders():
+		open[str(spec["id"])] = "open"
+	return open
 
 
 static func _upgrades_from(value: Variant) -> Variant:

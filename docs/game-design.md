@@ -1,6 +1,6 @@
 # FinoFarm game design
 
-Status: Milestone 3 adds hiring on top of the Milestone 2 loop. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
+Status: Milestone 4 adds a production choice on top of the Milestone 3 crew. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
 
 ## Player fantasy
 
@@ -25,13 +25,14 @@ The first recipes are a textile chain, defined in `scripts/simulation/catalog.gd
 | Recipe | Inputs | Output | Ticks |
 | --- | --- | --- | --- |
 | `bundle_fiber` | 2 Verdant Fiber | 1 Fiber Bundle | 4 |
+| `twist_cord` | 2 Verdant Fiber | 1 Fiber Cord | 5 |
 | `pack_textile` | 1 Fiber Bundle + 1 Seal Wax | 1 Packed Textile | 3 |
 
-One tick is one simulated second. Splitting that second across frames does not change the result. The farm scene runs the bundle recipe through `SimStepper`. `pack_textile` stays in the catalog for a later chain. It is not on the order board yet.
+One tick is one simulated second. Splitting that second across frames does not change the result. The farm scene runs the bundle and cord recipes through `SimStepper`. Both fiber recipes spend a full harvest. `pack_textile` stays in the catalog for a later chain. It is not on the order board yet.
 
 Verdant Fiber on the placed plot uses the same clock. `ResourceCatalog.growth` sets 4 visual stages (row, sprout, leaf, ready), 2 ticks each, yield 2, grade common. The grade is assigned by that table. Nothing in the plot computes a grow recipe.
 
-The intro order `intro_bundle` pays 180 for one Fiber Bundle. The barn loft costs 400. The richest starting purse is Tropical Valley at 360, so the loft is unaffordable until that order pays. Innovation Plains starts at 240 and can afford it after the same payment (20 left).
+The intro order `intro_bundle` pays 180 for one Fiber Bundle. The lane order `lane_cord` pays 240 for one Fiber Cord. The barn loft costs 400. The richest starting purse is Tropical Valley at 360, so the loft is unaffordable until the intro order pays. Innovation Plains starts at 240 and can afford it after the same payment (20 left). The shuttle rack costs 160 and shortens the next loom job by one tick. It is purchased only after the loft. A new farm still starts with 4 Verdant Fiber so the save has a real stack. That stack is not a harvest. One harvest is 2, and each of the two goods spends 2.
 
 ## What this build lets the player do
 
@@ -43,6 +44,7 @@ Launch Godot. The main menu sits on a 3D farm. New Game asks for a name and one 
 - The HUD shows the farm name, region, funds, inventory, and a short prompt from Mara, the advisor voice. Mara is text on the HUD. She is not a new character model.
 - Harvest the ready plot, bundle two fibers, deliver the trail-stall order, and buy the barn loft. The tutorial blocks those buttons until the matching step. After the loft, the prompt says the loop is done.
 - After that lesson, open Crew. Two candidates are listed with the six ratings. Hire one and assign them to the workshop. The next bundle is shorter when their attribute total is higher. The hired person stands at the shed and plays a work clip while the loom runs.
+- After that lesson, the workshop can also twist a Fiber Cord from the same Verdant Fiber. The order board shows both the trail stall and the lane counter. Delivering one does not deliver the other. The inventory line names both goods. The shuttle rack is a second building purchase. It appears on the shed and shortens the next job.
 
 `pack_textile` is still later. See [the vertical slice](vertical-slice-m1.md) for what Milestone 1 added. Wages are listed and not charged. Training and experience are not in this build.
 
@@ -54,7 +56,7 @@ The camera orbits a focus point. Pitch stays between about 20° and 66° so the 
 
 Plan, operate, produce, fulfill an order, earn, improve, expand, automate.
 
-The Milestone 2 tutorial is the part of that sequence this build can play: place a plot, wait out the fiber timer, harvest, bundle, deliver, and buy the loft. Mara's lines and step order are unchanged. Crew opens after that lesson. Do not treat the walking farmhand as an employee.
+The Milestone 2 tutorial is the part of that sequence this build can play: place a plot, wait out the fiber timer, harvest, bundle, deliver, and buy the loft. Mara's lines and step order are unchanged. Crew opens after that lesson. The cord, the lane order, and the shuttle rack open after that lesson too. Do not treat the walking farmhand as an employee.
 
 ## Characters
 
@@ -73,7 +75,7 @@ The figure who walks the path is still not an employee. The person at the loom i
 
 ## Out of scope for this build
 
-Wages are shown and not deducted. Experience, training, and traits that change ratings are later. `pack_textile` stays off the board. Research, audio, weather, and final models are later.
+Wages are shown and not deducted. Experience, training, and traits that change ratings are later. `pack_textile` stays off the board. Research, audio, weather, and final models are later. The shuttle rack changes speed only. It does not add a second loom.
 
 ## Regions
 

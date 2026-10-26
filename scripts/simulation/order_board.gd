@@ -4,7 +4,11 @@ extends RefCounted
 ## One introductory contract. Fulfillment spends inventory and returns a new fund total.
 ## A failure leaves both alone.
 
-var status := {"intro_bundle": "open"}
+var status := {}
+
+
+func _init() -> void:
+	_fill_missing()
 
 
 func try_fulfill(order_id: String, inventory: FarmInventory, funds: int) -> Dictionary:
@@ -52,8 +56,14 @@ func import_state(data: Dictionary) -> void:
 	status = {}
 	for key in data.keys():
 		status[str(key)] = str(data[key])
-	if not status.has("intro_bundle"):
-		status["intro_bundle"] = "open"
+	_fill_missing()
+
+
+func _fill_missing() -> void:
+	for spec in ResourceCatalog.orders():
+		var order_id := str(spec["id"])
+		if not status.has(order_id):
+			status[order_id] = "open"
 
 
 func _same(reason: String, funds: int) -> Dictionary:
