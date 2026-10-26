@@ -1,0 +1,23 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  godot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Godot runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxcursor1 libxinerama1 libxrandr2 libxi6 libgl1 libfontconfig1
+      - name: Install pinned tools
+        run: bash .cursor/install.sh
+      - name: Import, scene check, and simulation tests
+        run: bash tools/validate.sh
