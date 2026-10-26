@@ -1,6 +1,6 @@
 # FinoFarm art bible
 
-Status: cozy stylized direction. The barn and the farmhand are in-engine models. They are not approved final art. Terrain, trees, the plot marker, the fiber plot, the workshop, and the barn loft are still placeholders. The person at the loom is a second instance of the farmhand mesh, not a new character.
+Status: cozy stylized direction. The barn, the farmhand, the grove trees, the workshop shed, and the plot marker are in-engine models. They are a first stylized pass, not approved final art. Terrain, the fiber plot, the selection ring, the barn loft, and the shuttle rack are still placeholders. The person at the loom is a second instance of the farmhand mesh, not a new character.
 
 ## Target
 
@@ -24,8 +24,8 @@ These hex values are the materials on the first scene. Final textures stay in th
 | Roof | `#8C4636` | Placeholder roof |
 | Door | `#6B4228` | Placeholder door |
 | Window | `#8FB7C9` | Placeholder window, muted teal accent |
-| Trunk | `#6E4A2C` | Placeholder trees |
-| Canopy | `#2F8A45` | Placeholder trees |
+| Trunk | `#6E4A2C` | Grove trees and the plot stake |
+| Canopy | `#2F8A45` | Grove trees |
 | Shirt | `#F3E6C8` | Placeholder walker torso |
 | Pants | `#C67A2E` | Placeholder walker hips and legs |
 | Skin | `#E8C2A0` | Placeholder walker head and arms |
@@ -40,17 +40,17 @@ Interface surfaces, when UI arrives, use warm cream panels (`#F3E6C8` range) and
 | --- | --- | --- |
 | `PlaceholderTerrain` | Subdivided plane. Shader fakes hills at the edges and a square dirt loop. The center is flat so the character does not sink. | placeholder |
 | `Barn` | glTF from `tools/blender/barn.py`. Gable roof, doors, windows, cupola. Flat colors from this palette. No textures. | in-engine, not accepted final art |
-| `PlaceholderTreeA`, `PlaceholderTreeB`, `PlaceholderTreeC` | Cylinder trunk, sphere canopy. | placeholder |
+| `PlaceholderTreeA`, `PlaceholderTreeB`, `PlaceholderTreeC` | One glTF from `tools/blender/tree.py`, three times, with different scale and yaw. Tapered trunk and a lumpy canopy. | in-engine, first stylized pass |
 | `Farmhand` | glTF from `tools/blender/farmhand.py`. One skin, `idle`, `walk`, and `work` clips. The model child is scaled `1.55` so the figure reads at the default camera. | in-engine, not accepted final art |
 | `WorkshopWorker` | The same glTF, instanced again in front of the shed. `work` plays while the loom job is busy. A name label sits above the figure. | in-engine, not accepted final art |
-| `PlaceholderPlotMarker`, `PlaceholderPlotHover` | Cylinder post and a box flag. | placeholder |
+| `PlaceholderPlotMarker`, `PlaceholderPlotHover` | glTF from `tools/blender/plot_marker.py`. A tapered stake and a pennant, offset to the plot rim. | in-engine, first stylized pass |
 | `PlaceholderSelectionRing` | Flat cylinder shown when the barn is selected. | placeholder |
 | `PlaceholderCrop` | Disc, nub, stem, sphere, and an amber tuft. Swapped to match the plot stage. | placeholder |
-| `PlaceholderWorkshop` | Boxes for a shed, a cylinder loom arm, and a small shuttle. The arm spins only while the workshop job is busy. | placeholder |
+| `PlaceholderWorkshop` | Shed glTF from `tools/blender/workshop.py`, plus a separate beam and shuttle. The beam spins only while the workshop job is busy. | in-engine, first stylized pass |
 | `PlaceholderBarnLoft` | A box room, a box roof, and a teal window, shown after the loft is bought. | placeholder |
 | `PlaceholderShuttleRack` | A wood rail and two amber boxes on the shed roof, shown after the shuttle rack is bought. | placeholder |
 
-Do not describe the terrain, trees, marker, ring, crop, workshop, loft, or shuttle rack as finished art. Do not describe the barn, the farmhand, or the workshop worker as an approved final asset. The worker is the farmhand mesh again, not a portrait of Alex or Bram. `work` is an in-place arm pass while the loom job is busy. Carry, celebrate, and rest clips are not in this build. The old box walker and its sine-wave swing are gone. The loom spin is a presentation of the busy flag, not a finished machine animation.
+Do not describe the terrain, ring, crop, loft, or shuttle rack as finished art. Do not describe the barn, the farmhand, the grove trees, the workshop shed, the plot marker, or the workshop worker as approved final assets. The trees, the shed, and the marker are the first stylized pass. The worker is the farmhand mesh again, not a portrait of Alex or Bram. `work` is an in-place arm pass while the loom job is busy. Carry, celebrate, and rest clips are not in this build. The old box walker and its sine-wave swing are gone. The old cylinder trees, box shed, and box flag are gone. The loom spin is a presentation of the busy flag, not a finished machine animation.
 
 ## Camera readability
 

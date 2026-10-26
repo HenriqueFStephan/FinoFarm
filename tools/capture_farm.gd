@@ -10,6 +10,7 @@ func _initialize() -> void:
 	var crew := false
 	var priority := false
 	var automation := false
+	var props := false
 	for arg in OS.get_cmdline_user_args():
 		if str(arg).begins_with("--output="):
 			output = str(arg).trim_prefix("--output=")
@@ -23,6 +24,8 @@ func _initialize() -> void:
 			priority = true
 		elif str(arg) == "--automation":
 			automation = true
+		elif str(arg) == "--props":
+			props = true
 	if menu:
 		var menu_scene: PackedScene = load("res://scenes/menu/main_menu.tscn")
 		if menu_scene == null:
@@ -48,6 +51,8 @@ func _initialize() -> void:
 	root.add_child(farm)
 	if crew:
 		call_deferred("_capture_crew", farm, output)
+	elif props:
+		call_deferred("_capture_props", farm, output)
 	elif automation:
 		call_deferred("_capture_automation", farm, output)
 	elif priority:
@@ -293,6 +298,47 @@ func _capture_automation(farm: Node, output: String) -> void:
 		anim.play("work")
 		anim.seek(0.08, true)
 		anim.pause()
+	await _capture_view(output)
+
+
+func _capture_props(farm: Node, output: String) -> void:
+	for _frame in 4:
+		await process_frame
+	var session := farm as FarmSession
+	session.set_process(false)
+	var err := session.place_marker_at(4.0, 4.0)
+	if err != "":
+		push_error(err)
+		quit(4)
+		return
+	session.loop.plot.stage = 3
+	session.loop.plot.ticks_remaining = 0
+	session.refresh_presentation()
+	var crop := session.get_node("PlaceholderCrop") as CropVisual
+	if not crop.visible or not crop.ready_visible():
+		push_error("ready crop hidden")
+		quit(4)
+		return
+	for panel_name in ["HudRoot/Hint", "HudRoot/TutorialPanel", "HudRoot/LedgerLabel"]:
+		var panel := session.hud.get_node_or_null(panel_name) as CanvasItem
+		if panel != null:
+			panel.visible = false
+	var view := session.get_node("Stage/FarmCamera") as Camera3D
+	view.focus = Vector3(4.4, 1.05, 1.6)
+	view.yaw = 0.82
+	view.pitch = 0.5
+	view.distance = 12.8
+	view.orbit(0.0, 0.0)
+	var walker = session.get_node("Stage/Farmhand")
+	walker.set_process(false)
+	walker.global_position = Vector3(1.6, 0.0, 5.6)
+	var anim: AnimationPlayer = walker.animation_player()
+	if anim != null and anim.has_animation("walk"):
+		anim.play("walk")
+		anim.seek(0.25, true)
+		anim.pause()
+	session.workshop_rig.set_process(false)
+	session.workshop_rig.advance(0.55, true)
 	await _capture_view(output)
 
 

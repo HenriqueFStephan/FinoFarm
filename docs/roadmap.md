@@ -10,7 +10,7 @@ The charter's milestone list, with current status. Dates are not estimates. Stat
 | 3 Employees | Assignments change outcomes, and workers are visible. | In review on this branch. Tasks FF-28 through FF-32. Two candidates, hire and assign on schema 1, bundle time follows the attribute total, and a work clip plays at the loom. The path walker is still not an employee. |
 | 4 Production expansion | Real choices about chains and buildings. | In review on this branch. Tasks FF-33 through FF-37. Fiber Cord competes with Fiber Bundle for one harvest, the lane order pays 240, and the shuttle rack shortens the next job. |
 | 5 Automation | The player's job shifts from doing tasks to directing them. | In review on this branch. Tasks FF-38 through FF-42. One paid loom rule starts Fiber Bundle or Fiber Cord from a ready plot when a worker is assigned. A full research tree and business specialization are not in this slice. |
-| 6 Content and polish | Consistent presentation and medium-term goals. | Not started. |
+| 6 Content and polish | Consistent presentation and medium-term goals. | In review on this branch for the first mesh pass only. Tasks FF-43 through FF-45 replace the trees, the workshop shed, and the plot marker. More characters, regions, sound, and accessibility are not in this slice. |
 | 7 Release candidate | A desktop build that has survived save, regression, and performance checks, ready for store review. | Not started. No export preset exists. |
 
 ## Milestone 0 done in this branch

@@ -72,6 +72,12 @@ func _farm() -> String:
 		return "terrain is not using the placeholder shader"
 	if farm.get_node("Stage/Barn").find_children("*", "MeshInstance3D", true, false).is_empty():
 		return "barn has no imported mesh"
+	for tree_name in ["PlaceholderTreeA", "PlaceholderTreeB", "PlaceholderTreeC"]:
+		var tree_reason := _gltf_child(farm.get_node("Stage/%s" % tree_name), "Model", tree_name)
+		if tree_reason != "":
+			return tree_reason
+		if farm.get_node("Stage/%s" % tree_name).get_node_or_null("Trunk") != null:
+			return "%s still has a primitive trunk" % tree_name
 	var walker = farm.get_node("Stage/Farmhand")
 	if walker.find_child("Skeleton3D", true, false) == null:
 		return "farmhand has no skeleton"
@@ -115,6 +121,11 @@ func _farm() -> String:
 	if research_button.visible:
 		return "research visible during the lesson"
 	var marker: Node3D = farm.get_node("PlaceholderPlotMarker")
+	var marker_mesh := _gltf_child(marker, "Model", "plot marker")
+	if marker_mesh != "":
+		return marker_mesh
+	if marker.get_node_or_null("Post") != null:
+		return "plot marker still has a primitive post"
 	if not marker.visible:
 		return "saved marker hidden"
 	if marker.global_position.distance_to(Vector3(6, 0, -6)) > 0.05:
@@ -180,6 +191,15 @@ func _economy(farm) -> String:
 	var workshop := session.get_node("PlaceholderWorkshop") as Node3D
 	if workshop.global_position.distance_to(WorkshopRig.WORLD_POSITION) > 0.05:
 		return "workshop at %s" % str(workshop.global_position)
+	var shed_mesh := _gltf_child(workshop, "Model", "workshop")
+	if shed_mesh != "":
+		return shed_mesh
+	for part_name in ["LoomArm", "Shuttle"]:
+		var part := workshop.get_node_or_null(part_name)
+		if part == null or not str(part.scene_file_path).ends_with(".glb"):
+			return "%s is not a gltf" % part_name
+	if workshop.get_node_or_null("BackWall") != null or workshop.get_node_or_null("Pad") != null:
+		return "workshop still has a primitive shed"
 	var loft := session.get_node("PlaceholderBarnLoft") as Node3D
 	if loft.visible:
 		return "loft starts visible"
@@ -191,6 +211,16 @@ func _economy(farm) -> String:
 	session.refresh_presentation()
 	if not crop.visible:
 		return "seeded crop hidden"
+	if crop.get_node("Sprout").visible or crop.get_node("Leaf").visible or crop.get_node("ReadyTuft").visible:
+		return "row stage shows a later mesh"
+	session.loop.plot.stage = 1
+	session.refresh_presentation()
+	if not crop.get_node("Sprout").visible or crop.get_node("Leaf").visible or crop.get_node("ReadyTuft").visible:
+		return "sprout stage"
+	session.loop.plot.stage = 2
+	session.refresh_presentation()
+	if not crop.get_node("Sprout").visible or not crop.get_node("Leaf").visible or crop.get_node("ReadyTuft").visible:
+		return "leaf stage"
 	session.loop.plot.stage = 3
 	session.loop.plot.ticks_remaining = 0
 	session.refresh_presentation()
@@ -330,6 +360,17 @@ func _crew(session: FarmSession) -> String:
 	var crew_button := session.get_node("Hud/HudRoot/ActionColumn/CrewButton") as Button
 	if not crew_button.visible:
 		return "crew hidden after the lesson"
+	return ""
+
+
+func _gltf_child(node: Node, child_name: String, label: String) -> String:
+	var model := node.get_node_or_null(child_name)
+	if model == null:
+		return "%s has no %s" % [label, child_name]
+	if not str(model.scene_file_path).ends_with(".glb"):
+		return "%s model %s" % [label, model.scene_file_path]
+	if model.find_children("*", "MeshInstance3D", true, false).is_empty():
+		return "%s gltf has no mesh" % label
 	return ""
 
 

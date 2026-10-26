@@ -94,7 +94,8 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 `tests/run_scene_checks.gd` loads scenes after the tree is up (`call_deferred`, because `_initialize` runs too early).
 
 - Main scene path is the menu.
-- The farm has placeholder terrain, an imported barn mesh, a tree, the farmhand, and the camera.
+- The farm has placeholder terrain, an imported barn mesh, three imported trees, the farmhand, and the camera.
+- The workshop shed, loom beam, shuttle, and plot marker are imported glTF files. Row, sprout, leaf, and ready on the fiber plot stay distinct.
 - The farmhand has a skeleton. `walk` and `idle` exist. `advance(1.0)` moves about `1.7` units and leaves `walk` playing.
 - The HUD name, region, and funds come from a save written in the test.
 - A saved marker appears on its cell. The player can move it, remove it, and a barn cell selects the barn instead.
@@ -118,7 +119,7 @@ godot --path . --display-driver x11 --rendering-driver opengl3 \
 
 On this cloud VM the working display was `:1` and the driver fell back to llvmpipe. Audio to ALSA fails here and Godot switches to the dummy driver. That warning is not a scene failure.
 
-The capture proves the scene draws. It does not approve art. Compare the image to `docs/art-bible.md`. Placeholder meshes stay labeled placeholders.
+The capture proves the scene draws. It does not approve art. Compare the image to `docs/art-bible.md`. A first stylized pass stays labeled that way. Placeholder meshes stay labeled placeholders.
 
 There is no image-diff harness yet. FF-8 is the first human or GPU review. Add pixel diffs only after a frame is worth locking.
 
@@ -127,7 +128,7 @@ There is no image-diff harness yet. FF-8 is the first human or GPU review. Add p
 - Export templates and HTML5 (FF-7).
 - Mouse-drag orbit in a window. The math is tested; a desktop pass should still drag once.
 - Performance numbers.
-- `tools/blender/export_probe.py` still only writes a throwaway cube to `/tmp`. The barn and farmhand generators are the project assets.
+- `tools/blender/export_probe.py` still only writes a throwaway cube to `/tmp`. The barn, farmhand, tree, workshop, and plot-marker generators are the project assets.
 
 ## Definition of done
 
