@@ -89,6 +89,20 @@ No new GitHub issues. These rows are the claim.
 
 GitHub issues #2 through #14 stay the Milestone 0 and 1 issues. Milestone 3 does not add another issue for the same work.
 
+## Milestone 4
+
+No new GitHub issues. These rows are the claim.
+
+| Id | Issue | Title | Owner | Status | Depends on | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| FF-33 | — | Fiber Cord competes for Verdant Fiber | `bc-a2d85e29-8871-5ee1-9ab2-e3bf95968b2b` | in_review | FF-21, FF-23 | `tests/run_priority_tests.gd` shows `twist_cord` spends the same harvest amount as `bundle_fiber`. |
+| FF-34 | — | Lane order pays a different amount | `bc-a2d85e29-8871-5ee1-9ab2-e3bf95968b2b` | in_review | FF-24, FF-33 | `lane_cord` pays 240. `intro_bundle` still pays 180. A missing save key loads the new order as open. Schema stays `1`. |
+| FF-35 | — | One harvest cannot fill both orders | `bc-a2d85e29-8871-5ee1-9ab2-e3bf95968b2b` | in_review | FF-33, FF-34 | Turning one harvest into either good leaves the other order unpaid and the other recipe short of inputs. |
+| FF-36 | — | Inventory shows both goods | `bc-a2d85e29-8871-5ee1-9ab2-e3bf95968b2b` | in_review | FF-22, FF-33 | `inventory_line()` names Fiber Bundle and Fiber Cord, including a zero count. |
+| FF-37 | — | Shuttle rack changes loom speed | `bc-a2d85e29-8871-5ee1-9ab2-e3bf95968b2b` | in_review | FF-25, FF-30 | The rack costs 160, does not change a running job, and the next job is one tick faster. Alex and Bram still differ. The mesh starts hidden. |
+
+GitHub issues #2 through #14 stay the Milestone 0 and 1 issues. Milestone 4 does not add another issue for the same work.
+
 FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` unless they instance child scenes. Child scenes are the default.
 
 ## Environment
@@ -98,5 +112,5 @@ FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` 
 | FF-3 | Cloud or local. Needs Godot. A display is only for the capture. |
 | FF-7 | Cloud, with network access to official Godot templates. |
 | FF-8, FF-13, FF-18, FF-19 | Prefer a display. Headless import is necessary and not sufficient. |
-| FF-11, FF-12, FF-17 math, FF-21 through FF-32 rules | Cloud. Staff and economy tests must not require rendering. The crew screenshot needs a display. |
+| FF-11, FF-12, FF-17 math, FF-21 through FF-37 rules | Cloud. Staff, economy, and priority tests must not require rendering. The order-board screenshot needs a display. |
 | FF-9 | Human admin on GitHub. |

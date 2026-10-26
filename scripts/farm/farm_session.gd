@@ -23,6 +23,7 @@ var _barn_selected := false
 @onready var workshop_rig: WorkshopRig = $PlaceholderWorkshop
 @onready var workshop_worker: WorkshopWorker = $WorkshopWorker
 @onready var loft: Node3D = $PlaceholderBarnLoft
+@onready var shuttle_rack: Node3D = $PlaceholderShuttleRack
 @onready var hud: FarmHud = $Hud
 
 
@@ -124,6 +125,14 @@ func start_workshop() -> String:
 	return err
 
 
+func start_cord() -> String:
+	var err := loop.start_cord()
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
 func fulfill_order() -> String:
 	var err := loop.fulfill_intro(game)
 	refresh_presentation()
@@ -132,8 +141,24 @@ func fulfill_order() -> String:
 	return err
 
 
+func fulfill_cord() -> String:
+	var err := loop.fulfill_cord(game)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
 func buy_loft() -> String:
 	var err := loop.buy_loft(game)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func buy_shuttle() -> String:
+	var err := loop.buy_shuttle(game)
 	refresh_presentation()
 	if err == "":
 		_write()
@@ -175,6 +200,7 @@ func play_intro_cycle(plot_x: float, plot_z: float) -> String:
 func refresh_presentation() -> void:
 	_sync_crop()
 	_sync_loft()
+	_sync_rack()
 	if workshop_rig != null:
 		workshop_rig.operating = loop.workshop.is_busy()
 	_sync_worker()
@@ -310,6 +336,11 @@ func _sync_loft() -> void:
 		loft.visible = loop.upgrades.owns("barn_loft")
 
 
+func _sync_rack() -> void:
+	if shuttle_rack != null:
+		shuttle_rack.visible = loop.upgrades.owns("shuttle_rack")
+
+
 func _set_barn_selected(selected: bool) -> void:
 	_barn_selected = selected
 	selection_ring.visible = selected
@@ -334,12 +365,16 @@ func _connect_hud() -> void:
 		hud.workshop_pressed.connect(_on_workshop_button)
 	if not hud.workshop_start_pressed.is_connected(start_workshop):
 		hud.workshop_start_pressed.connect(start_workshop)
+	if not hud.workshop_cord_pressed.is_connected(start_cord):
+		hud.workshop_cord_pressed.connect(start_cord)
 	if not hud.orders_pressed.is_connected(_on_orders_button):
 		hud.orders_pressed.connect(_on_orders_button)
 	if not hud.order_deliver_pressed.is_connected(fulfill_order):
 		hud.order_deliver_pressed.connect(fulfill_order)
-	if not hud.upgrade_pressed.is_connected(buy_loft):
-		hud.upgrade_pressed.connect(buy_loft)
+	if not hud.order_deliver_cord_pressed.is_connected(fulfill_cord):
+		hud.order_deliver_cord_pressed.connect(fulfill_cord)
+	if not hud.upgrade_pressed.is_connected(_on_upgrade_button):
+		hud.upgrade_pressed.connect(_on_upgrade_button)
 	if not hud.crew_pressed.is_connected(_on_crew_button):
 		hud.crew_pressed.connect(_on_crew_button)
 	if not hud.hire_requested.is_connected(hire_worker):
@@ -360,6 +395,13 @@ func _on_workshop_button() -> void:
 
 func _on_orders_button() -> void:
 	hud.open_orders(not hud.orders_open)
+
+
+func _on_upgrade_button() -> void:
+	if loop.upgrades.owns("barn_loft"):
+		buy_shuttle()
+	else:
+		buy_loft()
 
 
 func _on_crew_button() -> void:

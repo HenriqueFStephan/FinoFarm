@@ -8,7 +8,7 @@ The charter's milestone list, with current status. Dates are not estimates. Stat
 | 1 First playable farm | Create a farm and explore a visually coherent 3D place. | In review on `cursor/milestone-1-playable-farm-e77b`. This branch stacks on it. Tasks FF-11 through FF-20. |
 | 2 Economic loop | Produce, sell, and upgrade once, with a tutorial. | In review on `cursor/milestone-2-economy-loop-3aa2`. Tasks FF-21 through FF-27. One Verdant Fiber plot, the bundle workshop, one order, and the barn loft. `pack_textile` is still catalog-only. |
 | 3 Employees | Assignments change outcomes, and workers are visible. | In review on this branch. Tasks FF-28 through FF-32. Two candidates, hire and assign on schema 1, bundle time follows the attribute total, and a work clip plays at the loom. The path walker is still not an employee. |
-| 4 Production expansion | Real choices about chains and buildings. | Not started. |
+| 4 Production expansion | Real choices about chains and buildings. | In review on this branch. Tasks FF-33 through FF-37. Fiber Cord competes with Fiber Bundle for one harvest, the lane order pays 240, and the shuttle rack shortens the next job. |
 | 5 Automation | The player's job shifts from doing tasks to directing them. | Not started. |
 | 6 Content and polish | Consistent presentation and medium-term goals. | Not started. |
 | 7 Release candidate | A desktop build that has survived save, regression, and performance checks, ready for store review. | Not started. No export preset exists. |

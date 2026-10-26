@@ -14,9 +14,10 @@ Scripts are `class_name` types under `scripts/simulation/`. They extend `RefCoun
 
 ### `ResourceCatalog`
 
-- `resources()` keys: `verdant_fiber`, `seal_wax`, `fiber_bundle`, `packed_textile`.
+- `resources()` keys: `verdant_fiber`, `seal_wax`, `fiber_bundle`, `fiber_cord`, `packed_textile`.
 - `recipe(id)` returns a deep copy, or `{}` if unknown.
-- Recipes today: `bundle_fiber` (4 ticks), `pack_textile` (3 ticks).
+- Recipes today: `bundle_fiber` (4 ticks, 2 Verdant Fiber → 1 Fiber Bundle), `twist_cord` (5 ticks, 2 Verdant Fiber → 1 Fiber Cord), `pack_textile` (3 ticks).
+- One plot harvest yields 2 Verdant Fiber, so it covers one of those two fiber recipes and not both.
 - Adding a recipe means editing the catalog and a test. Do not hard-code durations in UI code.
 
 ### `FarmInventory`
@@ -34,7 +35,7 @@ Scripts are `class_name` types under `scripts/simulation/`. They extend `RefCoun
 - Inputs are consumed at start. Output is granted on the tick that hits zero.
 - `tick(n)` finishes at most the current job. Extra ticks do not queue another craft.
 - Output grade is `GradeScale.minimum` of the consumed grades.
-- `try_start` takes an optional `duration_ticks`. Values below 1 keep the catalog duration. `FarmLoop` passes `WorkerPace.bundle_ticks` for that argument. The output amount stays the recipe amount.
+- `try_start` takes an optional `duration_ticks`. Values below 1 keep the catalog duration. `FarmLoop` passes `WorkerPace.job_ticks` for that argument, including the shuttle-rack bonus when it is owned. The output amount stays the recipe amount.
 
 ### `SimClock` and `SimStepper`
 
@@ -87,16 +88,18 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 
 ### `OrderBoard`
 
-- One order, `intro_bundle`: 1 `fiber_bundle`, reward `180`.
+- Two orders. `intro_bundle`: 1 `fiber_bundle`, reward `180`. `lane_cord`: 1 `fiber_cord`, reward `240`.
 - `try_fulfill` spends the lowest grade that covers the amount.
 - Failure codes: `unknown_order`, `missing_goods`, `already_done`. Funds and inventory stay as they were.
 - Success returns the new fund total and sets status `done`. A second call does not pay again.
+- A missing order id in a save loads as `open`. One harvest cannot satisfy both orders.
 
 ### `UpgradeShop`
 
-- `barn_loft` costs `400`.
+- `barn_loft` costs `400`. `shuttle_rack` costs `160` and carries `speed_ticks` `1`.
 - `try_purchase` failure codes: `unknown_upgrade`, `short_funds`, `already_owned`. Funds stay put.
 - Success subtracts the cost and sets owned.
+- The rack does not change a job that has already started. The next `bundle_fiber` or `twist_cord` loses one tick, floored at 1. `FarmLoop.buy_shuttle` also returns `tutorial` before the lesson ends and `needs_loft` before the loft is owned.
 
 ### `TutorialTrack` and `FarmLoop`
 
@@ -105,13 +108,16 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 - Removing the plot during grow or harvest rewinds to place.
 - `inventory_line()` is the HUD text.
 - Hiring is not a tutorial step. `hire_worker` and `assign_workshop` are available to the simulation at any step. The crew button stays hidden until step `done`.
+- `start_cord` and `fulfill_cord` return `tutorial` before step `done`. Mara's bundle, delivery, and loft steps are unchanged.
+- `inventory_line()` always names Fiber Bundle and Fiber Cord, including a zero count.
 
 ### `StaffCatalog`, `StaffRoster`, and `WorkerPace`
 
 - Candidates: `alex_morgan` (total 33) and `bram_holt` (total 23).
 - Attributes, each an integer from 1 to 10: `efficiency`, `technical`, `creativity`, `organization`, `social`, `adaptability`.
-- `WorkerPace.bundle_ticks` is the rule. Empty worker: catalog duration for `bundle_fiber` (4). Otherwise `max(1, catalog_duration - floor(attribute_total / 12))`.
-- Alex's total finishes a bundle in 2 ticks. Bram's finishes in 3. The output amount stays 1.
+- `WorkerPace.bundle_ticks` is the unboosted bundle rule. Empty worker: catalog duration for `bundle_fiber` (4). Otherwise `max(1, catalog_duration - floor(attribute_total / 12))`.
+- `WorkerPace.job_ticks(recipe_id, person, speed_ticks)` uses that recipe's catalog duration, then the same attribute rule, then subtracts `speed_ticks` when it is positive. `bundle_ticks` is `job_ticks("bundle_fiber", person, 0)`.
+- Alex's total finishes a bundle in 2 ticks, or 1 with the shuttle rack. Bram's finishes in 3, or 2 with the rack. A Fiber Cord is 5, 3, and 4 for nobody, Alex, and Bram, then one tick faster with the rack. The output amount stays 1.
 - A running job keeps the ticks it started with. Reassigning does not edit it.
 - `hire` failure codes: `unknown_worker`, `already_hired`. `assign_workshop` failure codes: `unknown_worker`, `not_hired`. Failures do not change the roster.
 - Listed `wage` is not subtracted from funds.
@@ -134,6 +140,8 @@ Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (import
 `WorkshopWorker` stands in front of that shed. It is hidden until someone is assigned. While the loom is busy it plays the imported `work` clip. While assigned and idle it plays `idle`. `WorkerName` is that person's name. The mesh is the same farmhand glTF, not a second character. The path `Farmhand` is still not an employee.
 
 `PlaceholderBarnLoft` starts hidden. It is shown when `barn_loft` is owned. The mesh is a placeholder.
+
+`PlaceholderShuttleRack` starts hidden. It is shown when `shuttle_rack` is owned. The mesh is a placeholder on the shed roof: a rail and two amber shuttles. It is not finished art.
 
 `PlaceholderCrop` follows the marker. `show_stage` hides it when the name is `empty`, and shows the ready tuft only for `ready`.
 
@@ -159,11 +167,11 @@ Keys:
 - `tutorial_step`
 - `marker` (`{}` or `{x, z}`)
 - `plot` (`planted`, `resource_id`, `stage`, `ticks_remaining`, `grade`). Missing or `{}` means not planted.
-- `orders` (`intro_bundle` is `open` or `done`). Missing or `{}` means the intro order is open.
-- `upgrades` (bool flags, currently `barn_loft`). Missing or `{}` means nothing is owned.
+- `orders` (`intro_bundle` and `lane_cord` are `open` or `done`). Missing, `{}`, or a known order omitted from the dict loads that order as `open`.
+- `upgrades` (bool flags, `barn_loft` and `shuttle_rack`). Missing or `{}` means nothing is owned.
 - `staff` (`hired` is an array of catalog ids, `workshop` is `""` or one of those ids). Missing or `{}` means nobody is hired and the bench is unassigned.
 
-A plot stage outside `0..3`, a bad grade, an unknown order id, a non-bool upgrade value, an unknown worker id, a duplicate hire, or a workshop id that was not hired is rejected. Schema `2` is still rejected. Old schema-1 files that omit `plot`, `orders`, `upgrades`, or `staff` still load.
+A plot stage outside `0..3`, a bad grade, an unknown order id, a non-bool upgrade value, an unknown worker id, a duplicate hire, or a workshop id that was not hired is rejected. Schema `2` is still rejected. Old schema-1 files that omit `plot`, `orders`, `upgrades`, or `staff` still load. A file that only stored `intro_bundle` gains `lane_cord` as `open`.
 
 `create_new` requires a non-empty name of at most 32 characters and a catalog region. Starting funds are `RegionCatalog.PURSE - property_cost` (purse `500`, untuned). The file also stores 4 common Verdant Fiber so the inventory snapshot is real. That stack is not a grow recipe.
 

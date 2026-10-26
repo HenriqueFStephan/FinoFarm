@@ -9,13 +9,14 @@ static func resources() -> Dictionary:
 		"verdant_fiber": {"label": "Verdant Fiber", "category": "raw"},
 		"seal_wax": {"label": "Seal Wax", "category": "input"},
 		"fiber_bundle": {"label": "Fiber Bundle", "category": "intermediate"},
+		"fiber_cord": {"label": "Fiber Cord", "category": "intermediate"},
 		"packed_textile": {"label": "Packed Textile", "category": "good"},
 	}
 
 
 static func recipes() -> Array:
 	var found: Array = []
-	for recipe_id in ["bundle_fiber", "pack_textile"]:
+	for recipe_id in ["bundle_fiber", "twist_cord", "pack_textile"]:
 		found.append(recipe(recipe_id))
 	return found
 
@@ -55,6 +56,13 @@ static func stage_label(stage: int) -> String:
 			return "empty"
 
 
+static func orders() -> Array:
+	var found: Array = []
+	for entry in _orders():
+		found.append((entry as Dictionary).duplicate(true))
+	return found
+
+
 static func order(order_id: String) -> Dictionary:
 	for entry in _orders():
 		if str(entry["id"]) == order_id:
@@ -78,6 +86,13 @@ static func _orders() -> Array:
 			"requires": [{"id": "fiber_bundle", "amount": 1}],
 			"reward_funds": 180,
 		},
+		{
+			"id": "lane_cord",
+			"label": "Lane counter cord",
+			"detail": "The lane counter pays a different price for one Fiber Cord.",
+			"requires": [{"id": "fiber_cord", "amount": 1}],
+			"reward_funds": 240,
+		},
 	]
 
 
@@ -88,6 +103,13 @@ static func _upgrades() -> Array:
 			"label": "Barn loft",
 			"detail": "Adds a storage loft on the barn.",
 			"cost": 400,
+		},
+		{
+			"id": "shuttle_rack",
+			"label": "Shuttle rack",
+			"detail": "A second shuttle on the loom. The next job finishes one tick sooner.",
+			"cost": 160,
+			"speed_ticks": 1,
 		},
 	]
 
@@ -100,6 +122,13 @@ static func _definitions() -> Array:
 			"output_id": "fiber_bundle",
 			"output_amount": 1,
 			"duration_ticks": 4,
+		},
+		{
+			"id": "twist_cord",
+			"inputs": [{"id": "verdant_fiber", "amount": 2}],
+			"output_id": "fiber_cord",
+			"output_amount": 1,
+			"duration_ticks": 5,
 		},
 		{
 			"id": "pack_textile",
