@@ -1,6 +1,6 @@
 """Build the FinoFarm farmhand and export assets/models/farmhand.glb.
 
-Project-original mesh, armature, and in-place idle/walk clips. Not a placeholder.
+Project-original mesh, armature, and in-place idle, walk, and work clips. Not a placeholder.
 """
 
 import math
@@ -326,9 +326,39 @@ def author_clips(arm_obj):
     key_pose(arm_obj, 24, breath, 0.02)
     key_pose(arm_obj, 48, {}, 0.0)
     stash(arm_obj, idle, idle_slot, "idle")
+    author_work(arm_obj)
     bpy.ops.pose.select_all(action="SELECT")
     bpy.ops.pose.transforms_clear()
     bpy.ops.object.mode_set(mode="OBJECT")
+
+
+def author_work(arm_obj):
+    # Lean toward the bench and pass the arms across. Not a machine lesson.
+    reach_left = {
+        "Spine": (18, 0, 0),
+        "Chest": (12, 8, 0),
+        "Head": (-8, 0, 0),
+        "Hips": (8, 0, 0),
+        "Arm.L": (-40, 0, 16),
+        "ForeArm.L": (55, 0, 0),
+        "Arm.R": (18, 0, -10),
+        "ForeArm.R": (24, 0, 0),
+    }
+    reach_right = {
+        "Spine": (18, 0, 0),
+        "Chest": (12, -8, 0),
+        "Head": (-8, 0, 0),
+        "Hips": (8, 0, 0),
+        "Arm.L": (18, 0, 10),
+        "ForeArm.L": (24, 0, 0),
+        "Arm.R": (-40, 0, -16),
+        "ForeArm.R": (55, 0, 0),
+    }
+    work, work_slot = ensure_action(arm_obj, "work")
+    key_pose(arm_obj, 1, reach_left, 0.0)
+    key_pose(arm_obj, 12, reach_right, 0.03)
+    key_pose(arm_obj, 24, reach_left, 0.0)
+    stash(arm_obj, work, work_slot, "work")
 
 
 def preview():
@@ -427,7 +457,7 @@ def main():
     data = OUT.read_bytes()
     print(f"triangles {tris}")
     print(f"exported {OUT} ({len(data)} bytes)")
-    if b"walk" not in data or b"idle" not in data:
+    if b"walk" not in data or b"idle" not in data or b"work" not in data:
         print("animation names missing from glb", file=sys.stderr)
         sys.exit(1)
     if len(data) < 1000:

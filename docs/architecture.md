@@ -10,7 +10,7 @@ Commit `1d862f4` on `main` contained only:
 
 There was no Godot project, no scene, no asset, and no design doc in the repo. That tree cannot run a stylized 3D game. It can install the tools a Godot game needs. Those bootstrap files stay. This document describes the project added on top of them.
 
-The repo hosts a Godot 4 game: it imports, the menu loads a farm, and simulation code runs without a renderer. Saves, region data, one barn model, one rigged character, and one textile loop (grow, bundle, sell, buy a loft) are in. It still cannot host the commercial game. There is no hiring, and the terrain, crop, workshop, and loft are still placeholders.
+The repo hosts a Godot 4 game: it imports, the menu loads a farm, and simulation code runs without a renderer. Saves, region data, one barn model, one rigged character, one textile loop (grow, bundle, sell, buy a loft), and a two-person crew are in. It still cannot host the commercial game. The terrain, crop, workshop, and loft are still placeholders. The loom worker reuses the farmhand mesh.
 
 ## ADR-001 — Godot 4.7 standard, Compatibility renderer
 
@@ -41,8 +41,10 @@ scenes/farm/first_farm.tscn
 scenes/farm/farm_stage.tscn
 scenes/buildings/barn.tscn
 scenes/characters/farmhand.tscn
+scenes/characters/workshop_worker.tscn
 scripts/camera/farm_camera.gd
 scripts/characters/farmhand.gd
+scripts/characters/workshop_worker.gd
 scripts/farm/farm_session.gd
 scripts/presentation/
 scripts/ui/
@@ -52,6 +54,7 @@ tests/run_region_tests.gd
 tests/run_save_load_tests.gd
 tests/run_placement_tests.gd
 tests/run_economy_tests.gd
+tests/run_staff_tests.gd
 tests/run_scene_checks.gd
 tools/validate.sh
 tools/capture_farm.gd
@@ -76,6 +79,7 @@ Autoloads: none. Add one only when two systems need a shared object and a direct
 - `Stage/FarmCamera` (script `orbit`, `zoom_by`, `pan_keys`, `pan_screen`)
 - `Hud` labels bound from the save
 - `PlaceholderPlotMarker`
+- `WorkshopWorker` (hidden until a hire is assigned; `work` clip while the loom is busy)
 
 Renaming these is an interface change. Update `tests/run_scene_checks.gd` and [interface contracts](interface-contracts.md) in the same commit.
 

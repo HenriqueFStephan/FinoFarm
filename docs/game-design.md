@@ -1,6 +1,6 @@
 # FinoFarm game design
 
-Status: Milestone 2 loop is in this branch. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
+Status: Milestone 3 adds hiring on top of the Milestone 2 loop. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
 
 ## Player fantasy
 
@@ -42,8 +42,9 @@ Launch Godot. The main menu sits on a 3D farm. New Game asks for a name and one 
 - Place, move, and remove one plot marker on the grid. Placing it starts Verdant Fiber. Clicking the barn selects it. Clicking the workshop shed opens the bundle job.
 - The HUD shows the farm name, region, funds, inventory, and a short prompt from Mara, the advisor voice. Mara is text on the HUD. She is not a new character model.
 - Harvest the ready plot, bundle two fibers, deliver the trail-stall order, and buy the barn loft. The tutorial blocks those buttons until the matching step. After the loft, the prompt says the loop is done.
+- After that lesson, open Crew. Two candidates are listed with the six ratings. Hire one and assign them to the workshop. The next bundle is shorter when their attribute total is higher. The hired person stands at the shed and plays a work clip while the loom runs.
 
-Hiring and `pack_textile` are still later. See [the vertical slice](vertical-slice-m1.md) for what Milestone 1 added. The Milestone 2 scene is the one that runs the workshop.
+`pack_textile` is still later. See [the vertical slice](vertical-slice-m1.md) for what Milestone 1 added. Wages are listed and not charged. Training and experience are not in this build.
 
 ## Camera
 
@@ -53,18 +54,27 @@ The camera orbits a focus point. Pitch stays between about 20° and 66° so the 
 
 Plan, operate, produce, fulfill an order, earn, improve, expand, automate.
 
-The Milestone 2 tutorial is the part of that sequence this build can play: place a plot, wait out the fiber timer, harvest, bundle, deliver, and buy the loft. Hiring and job assignment stay Milestone 3. Do not treat the walking farmhand as an employee.
+The Milestone 2 tutorial is the part of that sequence this build can play: place a plot, wait out the fiber timer, harvest, bundle, deliver, and buy the loft. Mara's lines and step order are unchanged. Crew opens after that lesson. Do not treat the walking farmhand as an employee.
 
 ## Characters
 
-Workers will have Efficiency, Technical Skill, Creativity, Organization, Social Skill, and Adaptability, each from 1 to 10, plus traits. Alex Morgan in the charter is an example, not a character who exists in the scene.
+Workers have Efficiency, Technical Skill, Creativity, Organization, Social Skill, and Adaptability, each from 1 to 10.
 
-The figure in the first scene is an unnamed block-out. They walk. They have no stats, no job, and no authored animation clip.
+The recruitment list has two people:
+
+| Id | Role | Total | Bundle ticks |
+| --- | --- | --- | --- |
+| `alex_morgan` | Junior Technician | 33 | 2 |
+| `bram_holt` | Yard Hand | 23 | 3 |
+
+Alex uses the charter's example ratings: 6, 8, 4, 5, 3, 7. Bram is lower on the bench and higher with people. The pace rule is `max(1, catalog_duration - floor(total / 12))`. Nobody assigned keeps the catalog's 4 ticks, so the lesson does not speed up by itself. The bundle still outputs 1. A job that has already started keeps its ticks if the player switches the assignee.
+
+The figure who walks the path is still not an employee. The person at the loom is a second instance of that same mesh, with the hired name above them. The `work` clip plays only while the workshop job is busy.
+
+## Out of scope for this build
+
+Wages are shown and not deducted. Experience, training, and traits that change ratings are later. `pack_textile` stays off the board. Research, audio, weather, and final models are later.
 
 ## Regions
 
-Later data, not this build. The charter's four starting sketches (Northern Homestead, Tropical Valley, Innovation Plains, Golden Fields) are balancing sketches. Implement them as rows in a catalog (task FF-11), not as hard-coded scene logic.
-
-## Out of scope until a later milestone
-
-Wages, hiring, research, audio, weather, `pack_textile` on the board, and final models. The menu, saves, placement, inventory line, one order, and the bundle workshop are in.
+The four starting regions are catalog rows (task FF-11), not hard-coded scene logic. They are balancing sketches, not geography.

@@ -34,6 +34,7 @@ Scripts are `class_name` types under `scripts/simulation/`. They extend `RefCoun
 - Inputs are consumed at start. Output is granted on the tick that hits zero.
 - `tick(n)` finishes at most the current job. Extra ticks do not queue another craft.
 - Output grade is `GradeScale.minimum` of the consumed grades.
+- `try_start` takes an optional `duration_ticks`. Values below 1 keep the catalog duration. `FarmLoop` passes `WorkerPace.bundle_ticks` for that argument. The output amount stays the recipe amount.
 
 ### `SimClock` and `SimStepper`
 
@@ -103,20 +104,34 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 - `FarmLoop` is what the farm scene calls. Harvest, bundle, deliver, and buy return `tutorial` until that step, and after `done` they stay available.
 - Removing the plot during grow or harvest rewinds to place.
 - `inventory_line()` is the HUD text.
+- Hiring is not a tutorial step. `hire_worker` and `assign_workshop` are available to the simulation at any step. The crew button stays hidden until step `done`.
+
+### `StaffCatalog`, `StaffRoster`, and `WorkerPace`
+
+- Candidates: `alex_morgan` (total 33) and `bram_holt` (total 23).
+- Attributes, each an integer from 1 to 10: `efficiency`, `technical`, `creativity`, `organization`, `social`, `adaptability`.
+- `WorkerPace.bundle_ticks` is the rule. Empty worker: catalog duration for `bundle_fiber` (4). Otherwise `max(1, catalog_duration - floor(attribute_total / 12))`.
+- Alex's total finishes a bundle in 2 ticks. Bram's finishes in 3. The output amount stays 1.
+- A running job keeps the ticks it started with. Reassigning does not edit it.
+- `hire` failure codes: `unknown_worker`, `already_hired`. `assign_workshop` failure codes: `unknown_worker`, `not_hired`. Failures do not change the roster.
+- Listed `wage` is not subtracted from funds.
 
 ### `FarmHud`
 
 - `bind(game)` sets the name, the region display name, and `Funds <n>` from the save.
 - `refresh(game, loop, barn_selected)` also sets the inventory line, Mara's prompt, and the last economy event from `FarmLoop`.
 - It does not keep its own copy of the numbers.
+- `CrewButton` is hidden until the tutorial step is `done`. The crew card reads names, ratings, and bundle ticks from `StaffCatalog` and `WorkerPace`.
 
 ## Scene nodes
 
 The main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is `res://scenes/farm/first_farm.tscn` and instances `scenes/farm/farm_stage.tscn`.
 
-Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA`, `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker`, `PlaceholderCrop`, `PlaceholderWorkshop`, `PlaceholderBarnLoft`, and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
+Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA`, `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker`, `PlaceholderCrop`, `PlaceholderWorkshop`, `PlaceholderBarnLoft`, `WorkshopWorker` (`work` clip), and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
 
 `PlaceholderWorkshop` sits at `WorkshopRig.WORLD_POSITION` `(6.4, 0, 2.8)`. `advance(delta, false)` does not spin the loom. `advance(delta, true)` does. The scene sets `operating` from `Workshop.is_busy()`.
+
+`WorkshopWorker` stands in front of that shed. It is hidden until someone is assigned. While the loom is busy it plays the imported `work` clip. While assigned and idle it plays `idle`. `WorkerName` is that person's name. The mesh is the same farmhand glTF, not a second character. The path `Farmhand` is still not an employee.
 
 `PlaceholderBarnLoft` starts hidden. It is shown when `barn_loft` is owned. The mesh is a placeholder.
 
@@ -146,8 +161,9 @@ Keys:
 - `plot` (`planted`, `resource_id`, `stage`, `ticks_remaining`, `grade`). Missing or `{}` means not planted.
 - `orders` (`intro_bundle` is `open` or `done`). Missing or `{}` means the intro order is open.
 - `upgrades` (bool flags, currently `barn_loft`). Missing or `{}` means nothing is owned.
+- `staff` (`hired` is an array of catalog ids, `workshop` is `""` or one of those ids). Missing or `{}` means nobody is hired and the bench is unassigned.
 
-A plot stage outside `0..3`, a bad grade, an unknown order id, or a non-bool upgrade value is rejected. Schema `2` is still rejected. Old schema-1 files that omit the three new keys still load.
+A plot stage outside `0..3`, a bad grade, an unknown order id, a non-bool upgrade value, an unknown worker id, a duplicate hire, or a workshop id that was not hired is rejected. Schema `2` is still rejected. Old schema-1 files that omit `plot`, `orders`, `upgrades`, or `staff` still load.
 
 `create_new` requires a non-empty name of at most 32 characters and a catalog region. Starting funds are `RegionCatalog.PURSE - property_cost` (purse `500`, untuned). The file also stores 4 common Verdant Fiber so the inventory snapshot is real. That stack is not a grow recipe.
 

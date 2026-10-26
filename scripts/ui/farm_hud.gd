@@ -8,6 +8,9 @@ signal workshop_start_pressed
 signal orders_pressed
 signal order_deliver_pressed
 signal upgrade_pressed
+signal crew_pressed
+signal hire_requested(worker_id: String)
+signal assign_requested(worker_id: String)
 
 var name_label: Label
 var region_label: Label
@@ -27,9 +30,14 @@ var workshop_start: Button
 var order_panel: PanelContainer
 var order_body: Label
 var order_deliver: Button
-
+var crew_button: Button
+var crew_panel: PanelContainer
 var workshop_open := false
 var orders_open := false
+var crew_open := false
+var _crew_labels := {}
+var _hire_buttons := {}
+var _assign_buttons := {}
 
 
 func _ready() -> void:
@@ -116,6 +124,9 @@ func _ready() -> void:
 	orders_button.pressed.connect(func() -> void: orders_pressed.emit())
 	upgrade_button = _action(column, "UpgradeButton", "Buy barn loft")
 	upgrade_button.pressed.connect(func() -> void: upgrade_pressed.emit())
+	crew_button = _action(column, "CrewButton", "Crew")
+	crew_button.visible = false
+	crew_button.pressed.connect(func() -> void: crew_pressed.emit())
 
 	workshop_panel = _card(root, "WorkshopPanel", Vector2(430, 150))
 	var workshop_title := _card_title(workshop_panel, "WorkshopTitle", "Textile workshop")
@@ -140,6 +151,8 @@ func _ready() -> void:
 	var order_close := _action(order_row, "OrderClose", "Close")
 	order_close.pressed.connect(func() -> void: _set_orders_open(false))
 
+	_build_crew(root)
+
 	var hint := _shadow_label("Hint")
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	hint.offset_top = -52
@@ -149,7 +162,7 @@ func _ready() -> void:
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", 15)
-	hint.text = "Left-click open ground to place the fiber plot. Click the workshop shed to bundle. X removes the plot. Esc saves and returns.\nRight-drag or Q/E orbit    Middle-drag or WASD pan    Wheel or +/- zoom"
+	hint.text = "Left-click open ground to place the fiber plot. Click the workshop shed to bundle. X removes the plot. Esc saves and returns.\nAfter Mara's lesson, Crew hires a worker for the loom. Right-drag or Q/E orbit. Middle-drag or WASD pan. Wheel or +/- zoom."
 	root.add_child(hint)
 
 
@@ -175,6 +188,9 @@ func refresh(game: SaveGame, loop: FarmLoop, barn_selected: bool) -> void:
 	_style_button(workshop_button, step == TutorialTrack.WORKSHOP or step == TutorialTrack.BUNDLE)
 	_style_button(orders_button, step == TutorialTrack.ORDER)
 	_style_button(upgrade_button, step == TutorialTrack.UPGRADE)
+	crew_button.visible = step >= TutorialTrack.DONE
+	_style_button(crew_button, step >= TutorialTrack.DONE and loop.roster.workshop_worker_id == "")
+	_fill_crew(loop)
 	barn_label.visible = barn_selected
 	if barn_selected:
 		if loop.upgrades.owns("barn_loft"):
@@ -186,6 +202,7 @@ func refresh(game: SaveGame, loop: FarmLoop, barn_selected: bool) -> void:
 	_fill_order(loop)
 	workshop_panel.visible = workshop_open
 	order_panel.visible = orders_open
+	crew_panel.visible = crew_open
 
 
 func set_marker_available(has_marker: bool) -> void:
@@ -204,12 +221,17 @@ func open_orders(open: bool) -> void:
 	_set_orders_open(open)
 
 
+func open_crew(open: bool) -> void:
+	_set_crew_open(open)
+
+
 func _set_workshop_open(open: bool) -> void:
 	workshop_open = open
 	workshop_panel.visible = open
 	if open:
 		orders_open = false
 		order_panel.visible = false
+		_close_crew()
 
 
 func _set_orders_open(open: bool) -> void:
@@ -218,11 +240,17 @@ func _set_orders_open(open: bool) -> void:
 	if open:
 		workshop_open = false
 		workshop_panel.visible = false
+		_close_crew()
 
 
 func _fill_workshop(loop: FarmLoop) -> void:
-	var recipe := ResourceCatalog.recipe("bundle_fiber")
-	var line := "Bundle 2 Verdant Fiber into 1 Fiber Bundle. %d ticks." % int(recipe["duration_ticks"])
+	var pace := WorkerPace.bundle_ticks(loop.roster.assigned_worker())
+	var line := "Bundle 2 Verdant Fiber into 1 Fiber Bundle. %d ticks." % pace
+	var person := loop.roster.assigned_worker()
+	if person.is_empty():
+		line += "\nNo one is assigned. The bench runs at the lesson pace."
+	else:
+		line += "\n%s is assigned." % str(person["name"])
 	if loop.workshop.is_busy():
 		line += "\nRunning. %d ticks left." % loop.workshop.ticks_remaining
 	else:
@@ -242,6 +270,103 @@ func _fill_order(loop: FarmLoop) -> void:
 		body += "\nOpen. Needs 1 Fiber Bundle."
 		order_deliver.disabled = not loop.tutorial.allows("order")
 	order_body.text = body
+
+
+func _build_crew(root: Control) -> void:
+	crew_panel = _card(root, "CrewPanel", Vector2(430, 150))
+	_card_title(crew_panel, "CrewTitle", "Recruitment")
+	var intro := Label.new()
+	intro.name = "CrewIntro"
+	intro.custom_minimum_size = Vector2(348, 0)
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.add_theme_font_size_override("font_size", 15)
+	intro.add_theme_color_override("font_color", Color(0.23, 0.16, 0.1))
+	intro.text = "Six ratings, each from 1 to 10. A higher total finishes a Fiber Bundle sooner. Listed wages are not charged."
+	crew_panel.get_node("Box").add_child(intro)
+	for person in StaffCatalog.workers():
+		var worker_id := str(person["id"])
+		var block := Label.new()
+		block.name = "Crew_%s" % worker_id
+		block.custom_minimum_size = Vector2(348, 0)
+		block.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		block.add_theme_font_size_override("font_size", 15)
+		block.add_theme_color_override("font_color", Color(0.23, 0.16, 0.1))
+		crew_panel.get_node("Box").add_child(block)
+		_crew_labels[worker_id] = block
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		crew_panel.get_node("Box").add_child(row)
+		var hire := _action(row, "Hire_%s" % worker_id, "Hire")
+		_wire_hire(hire, worker_id)
+		_hire_buttons[worker_id] = hire
+		var assign := _action(row, "Assign_%s" % worker_id, "Assign to workshop")
+		_wire_assign(assign, worker_id)
+		_assign_buttons[worker_id] = assign
+	var close := _action(crew_panel.get_node("Box"), "CrewClose", "Close")
+	close.pressed.connect(func() -> void: _set_crew_open(false))
+
+
+func _wire_hire(button: Button, worker_id: String) -> void:
+	button.pressed.connect(func() -> void: hire_requested.emit(worker_id))
+
+
+func _wire_assign(button: Button, worker_id: String) -> void:
+	button.pressed.connect(func() -> void: assign_requested.emit(worker_id))
+
+
+func _fill_crew(loop: FarmLoop) -> void:
+	for person in StaffCatalog.workers():
+		var worker_id := str(person["id"])
+		var hired := loop.roster.hired.has(worker_id)
+		var assigned := loop.roster.workshop_worker_id == worker_id
+		var label := _crew_labels[worker_id] as Label
+		label.text = _crew_text(person, hired, assigned)
+		(_hire_buttons[worker_id] as Button).visible = not hired
+		(_assign_buttons[worker_id] as Button).visible = hired and not assigned
+
+
+func _crew_text(person: Dictionary, hired: bool, assigned: bool) -> String:
+	var lines := StaffCatalog.attribute_lines(person)
+	var ticks := WorkerPace.bundle_ticks(person)
+	var status := "Not hired."
+	if assigned:
+		status = "At the workshop."
+	elif hired:
+		status = "Hired. Not assigned."
+	var trait_bits: PackedStringArray = PackedStringArray()
+	var raw_traits: Array = person["traits"]
+	for bit in raw_traits:
+		trait_bits.append(str(bit))
+	return "%s — %s\n%s\n%s\n%s\nTotal %d · bundle %d ticks · wage %d listed\n%s" % [
+		str(person["name"]),
+		str(person["role"]),
+		str(person["background"]),
+		lines[0],
+		lines[1],
+		StaffCatalog.attribute_total(person),
+		ticks,
+		int(person["wage"]),
+		status + " " + ", ".join(trait_bits),
+	]
+
+
+func _set_crew_open(open: bool) -> void:
+	crew_open = open
+	if crew_panel != null:
+		crew_panel.visible = open
+	if open:
+		workshop_open = false
+		orders_open = false
+		if workshop_panel != null:
+			workshop_panel.visible = false
+		if order_panel != null:
+			order_panel.visible = false
+
+
+func _close_crew() -> void:
+	crew_open = false
+	if crew_panel != null:
+		crew_panel.visible = false
 
 
 func _fact(row: HBoxContainer, node_name: String) -> Label:

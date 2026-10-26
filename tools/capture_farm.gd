@@ -7,6 +7,7 @@ func _initialize() -> void:
 	var output := "/tmp/finofarm-first-farm.png"
 	var menu := false
 	var cycle := false
+	var crew := false
 	for arg in OS.get_cmdline_user_args():
 		if str(arg).begins_with("--output="):
 			output = str(arg).trim_prefix("--output=")
@@ -14,6 +15,8 @@ func _initialize() -> void:
 			menu = true
 		elif str(arg) == "--cycle":
 			cycle = true
+		elif str(arg) == "--crew":
+			crew = true
 	if menu:
 		var menu_scene: PackedScene = load("res://scenes/menu/main_menu.tscn")
 		if menu_scene == null:
@@ -37,7 +40,9 @@ func _initialize() -> void:
 	farm.game = created["game"]
 	farm.persist = false
 	root.add_child(farm)
-	if cycle:
+	if crew:
+		call_deferred("_capture_crew", farm, output)
+	elif cycle:
 		call_deferred("_capture_cycle", farm, output)
 	else:
 		call_deferred("_capture", farm, output)
@@ -69,6 +74,57 @@ func _capture_cycle(farm: Node, output: String) -> void:
 		anim.play("walk")
 		anim.seek(0.25, true)
 		anim.pause()
+	await _capture_view(output)
+
+
+func _capture_crew(farm: Node, output: String) -> void:
+	for _frame in 4:
+		await process_frame
+	var session := farm as FarmSession
+	var err := session.play_intro_cycle(-6.0, 6.0)
+	if err != "":
+		push_error(err)
+		quit(4)
+		return
+	if session.hire_worker("alex_morgan") != "":
+		push_error("hire")
+		quit(4)
+		return
+	if session.assign_worker("alex_morgan") != "":
+		push_error("assign")
+		quit(4)
+		return
+	if session.start_workshop() != "":
+		push_error("bundle")
+		quit(4)
+		return
+	session.hud.open_crew(false)
+	session.hud.open_orders(false)
+	session.hud.open_workshop(false)
+	session.refresh_presentation()
+	session.set_process(false)
+	var walker = session.get_node("Stage/Farmhand")
+	walker.set_process(false)
+	walker.global_position = Vector3(-6.2, 0.0, -6.2)
+	var walk_anim: AnimationPlayer = walker.animation_player()
+	if walk_anim != null and walk_anim.has_animation("idle"):
+		walk_anim.play("idle")
+		walk_anim.pause()
+	session.workshop_rig.set_process(false)
+	session.workshop_rig.advance(0.85, true)
+	var stationed := session.workshop_worker
+	stationed.set_process(false)
+	var anim: AnimationPlayer = stationed.animation_player()
+	if anim != null and anim.has_animation("work"):
+		anim.play("work")
+		anim.seek(0.08, true)
+		anim.pause()
+	var view := session.get_node("Stage/FarmCamera") as Camera3D
+	view.focus = Vector3(5.45, 1.15, 3.85)
+	view.yaw = 0.62
+	view.pitch = 0.46
+	view.distance = 8.0
+	view.orbit(0.0, 0.0)
 	await _capture_view(output)
 
 
