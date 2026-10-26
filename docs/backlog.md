@@ -19,29 +19,29 @@ Status values: `queued`, `claimed`, `in_progress`, `in_review`, `blocked`, `done
 
 ## Milestone 0
 
-| Id | Title | Owner | Status | Depends on | Acceptance |
-| --- | --- | --- | --- | --- | --- |
-| FF-3 | Godot project, first farm scene, docs, skills, validation | `bc-33ae2792-3a45-50a2-ae00-e2e1dc389991` | in_review | environment bootstrap on `main` | `bash tools/validate.sh` exits 0. Main scene is the farm. Placeholders are labeled in `docs/art-bible.md`. |
-| FF-7 | Record HTML5 export constraints | unassigned | queued | FF-3 | Official export templates installed. One headless export attempt logged, including the error if templates or the Compatibility renderer block it. No claim of a playable browser build without a successful export. |
-| FF-8 | GPU review of the first farm frame | unassigned | queued | FF-3 | A desktop GPU capture compared to the art bible. Result is accept as block-out or a defect list. Does not reclassify primitives as final art. |
-| FF-9 | Require the Validate workflow on `main` | product director | queued | FF-3 merged and Actions green | Branch protection requires `Validate`. Agents do not flip this setting themselves. |
+| Id | Issue | Title | Owner | Status | Depends on | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| FF-3 | [PR #1](https://github.com/HenriqueFStephan/FinoFarm/pull/1) | Godot project, first farm scene, docs, skills, validation | `bc-33ae2792-3a45-50a2-ae00-e2e1dc389991` | in_review | environment bootstrap on `main` | `bash tools/validate.sh` exits 0. Main scene is the farm. Placeholders are labeled in `docs/art-bible.md`. |
+| FF-7 | [#2](https://github.com/HenriqueFStephan/FinoFarm/issues/2) | Record HTML5 export constraints | unassigned | queued | FF-3 | Official export templates installed. One headless export attempt logged, including the error if templates or the Compatibility renderer block it. No claim of a playable browser build without a successful export. |
+| FF-8 | [#3](https://github.com/HenriqueFStephan/FinoFarm/issues/3) | GPU review of the first farm frame | unassigned | queued | FF-3 | A desktop GPU capture compared to the art bible. Result is accept as block-out or a defect list. Does not reclassify primitives as final art. |
+| FF-9 | [#4](https://github.com/HenriqueFStephan/FinoFarm/issues/4) | Require the Validate workflow on `main` | product director | queued | FF-3 merged and Actions green | Branch protection requires `Validate`. Agents do not flip this setting themselves. |
 
 ## Milestone 1
 
-| Id | Title | Owner | Status | Depends on | Acceptance |
-| --- | --- | --- | --- | --- | --- |
-| FF-11 | Region catalog | unassigned | queued | FF-3 | Four regions load from data. A test reads costs and labels without a scene. Copy stays fictional. |
-| FF-12 | Save schema v1 and round-trip tests | unassigned | queued | FF-11 | `tests/run_save_load_tests.gd` is wired into `tools/validate.sh`. Two farms reload without mixing. Schema field is `1`. |
-| FF-13 | 3D main menu | unassigned | queued | FF-3 | Menu scene shows Continue, My Farms, New Game, Settings, Credits, Exit over a 3D farm view. Headless scene check loads it. |
-| FF-14 | Farm selector cards | unassigned | queued | FF-12, FF-13 | Cards show name, region, level, funds, playtime, last save. At least two saves can be opened. |
-| FF-15 | New farm creation | unassigned | queued | FF-11, FF-12, FF-13 | Name and region are required. Confirm writes a schema-1 save. |
-| FF-16 | World map and region choice | unassigned | queued | FF-11, FF-15 | Map markers come from the catalog. Selection shows the contract fields and returns the chosen id. |
-| FF-17 | Grid placement of one marker | unassigned | queued | FF-3 camera contract | Player places, moves, and removes one marker on a grid in the farm scene. A headless test checks the snap math without a screenshot. |
-| FF-18 | Modeled barn | unassigned | queued | FF-3 art bible | `barn` registry row is not `placeholder`. Scene instances a glTF. A capture shows it in the farm. |
-| FF-19 | Rigged walking character | unassigned | queued | FF-3 art bible | Registry row is not `placeholder`. An imported walk clip plays while the character moves. The procedural sine swing is gone. |
-| FF-20 | Basic farm HUD | unassigned | queued | FF-12 | HUD shows farm name, region, and funds from the save, not a hard-coded number that ignores the file. |
+| Id | Issue | Title | Owner | Status | Depends on | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| FF-11 | [#5](https://github.com/HenriqueFStephan/FinoFarm/issues/5) | Region catalog | unassigned | queued | FF-3 | Four regions load from data. A test reads costs and labels without a scene. Copy stays fictional. |
+| FF-12 | [#6](https://github.com/HenriqueFStephan/FinoFarm/issues/6) | Save schema v1 and round-trip tests | unassigned | queued | FF-11 | `tests/run_save_load_tests.gd` is wired into `tools/validate.sh`. Two farms reload without mixing. Schema field is `1`. |
+| FF-13 | [#7](https://github.com/HenriqueFStephan/FinoFarm/issues/7) | 3D main menu | unassigned | queued | FF-3 | Menu scene shows Continue, My Farms, New Game, Settings, Credits, Exit over a 3D farm view. Headless scene check loads it. |
+| FF-14 | [#8](https://github.com/HenriqueFStephan/FinoFarm/issues/8) | Farm selector cards | unassigned | queued | FF-12, FF-13 | Cards show name, region, level, funds, playtime, last save. At least two saves can be opened. |
+| FF-15 | [#9](https://github.com/HenriqueFStephan/FinoFarm/issues/9) | New farm creation | unassigned | queued | FF-11, FF-12, FF-13 | Name and region are required. Confirm writes a schema-1 save. |
+| FF-16 | [#10](https://github.com/HenriqueFStephan/FinoFarm/issues/10) | World map and region choice | unassigned | queued | FF-11, FF-15 | Map markers come from the catalog. Selection shows the contract fields and returns the chosen id. |
+| FF-17 | [#11](https://github.com/HenriqueFStephan/FinoFarm/issues/11) | Grid placement of one marker | unassigned | queued | FF-3 camera contract | Player places, moves, and removes one marker on a grid in the farm scene. A headless test checks the snap math without a screenshot. |
+| FF-18 | [#12](https://github.com/HenriqueFStephan/FinoFarm/issues/12) | Modeled barn | unassigned | queued | FF-3 art bible | `barn` registry row is not `placeholder`. Scene instances a glTF. A capture shows it in the farm. |
+| FF-19 | [#13](https://github.com/HenriqueFStephan/FinoFarm/issues/13) | Rigged walking character | unassigned | queued | FF-3 art bible | Registry row is not `placeholder`. An imported walk clip plays while the character moves. The procedural sine swing is gone. |
+| FF-20 | [#14](https://github.com/HenriqueFStephan/FinoFarm/issues/14) | Basic farm HUD | unassigned | queued | FF-12 | HUD shows farm name, region, and funds from the save, not a hard-coded number that ignores the file. |
 
-Issue column: filled when `gh` can open issues. Until then this table is the tracker.
+GitHub issues #2 through #14 were opened for these rows. This file remains the ownership record. Claim a row here and comment on the issue before coding.
 
 ## Dependency sketch
 
