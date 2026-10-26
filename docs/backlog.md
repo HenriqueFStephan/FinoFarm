@@ -119,13 +119,14 @@ GitHub issues #2 through #14 stay the Milestone 0 and 1 issues. Milestone 5 does
 
 ## Milestone 6
 
-No new GitHub issues. These rows are the claim. This slice is a first stylized pass on the trees, the workshop shed, and the plot marker. It does not add an economy system.
+No new GitHub issues. These rows are the claim. This slice is a first stylized pass on the trees, the workshop shed, the plot marker, and the valley ground. It does not add an economy system.
 
 | Id | Issue | Title | Owner | Status | Depends on | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
 | FF-43 | — | Stylized grove trees | `bc-6e5046c9-b9df-5ac0-8fbd-49a344d81aef` | in_review | FF-18 | Three trees instance one glTF. The scene check rejects a primitive trunk. `bash tools/validate.sh` exits 0. |
 | FF-44 | — | Stylized workshop shed | `bc-6e5046c9-b9df-5ac0-8fbd-49a344d81aef` | in_review | FF-23 | The shed, the loom beam, and the shuttle are glTF. The arm stays still while idle and moves while the job is busy. |
 | FF-45 | — | Stylized plot marker | `bc-6e5046c9-b9df-5ac0-8fbd-49a344d81aef` | in_review | FF-17, FF-21 | The stake is a glTF on the plot rim. Row, sprout, leaf, and ready stay visible on the plot. |
+| FF-46 | — | First valley terrain pass | `bc-7d529529-1899-5c58-a4bf-d8cc4513a545` | in_review | FF-43 | The ground is a glTF valley. The yard and the barn pad stay flat, the dirt path stays visible, and a hill rises outside the grid. The scene check rejects the edge shader. `bash tools/validate.sh` exits 0. |
 
 GitHub issues #2 through #14 stay the Milestone 0 and 1 issues. Milestone 6 does not add another issue for the same work.
 
@@ -139,5 +140,5 @@ FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` 
 | FF-7 | Cloud, with network access to official Godot templates. |
 | FF-8, FF-13, FF-18, FF-19 | Prefer a display. Headless import is necessary and not sufficient. |
 | FF-11, FF-12, FF-17 math, FF-21 through FF-42 rules | Cloud. Staff, economy, priority, and automation tests must not require rendering. The order-board and priority-control screenshots need a display. |
-| FF-43, FF-44, FF-45 | Cloud with Blender and a display. The scene check does not need a GPU. The farm frame does. |
+| FF-43, FF-44, FF-45, FF-46 | Cloud with Blender and a display. The scene check does not need a GPU. The farm frame does. |
 | FF-9 | Human admin on GitHub. |

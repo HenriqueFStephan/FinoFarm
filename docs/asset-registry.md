@@ -2,11 +2,11 @@
 
 Stub. Add a row before a new source file is used in a scene. Status `placeholder` means it is not final art, even if it is on screen.
 
-No third-party model, texture, audio, or font is imported. The barn, the farmhand, the grove trees, the workshop shed, the loom beam, the shuttle, and the plot marker were generated in Blender for this project. Terrain, the selection ring, the fiber plot, the barn loft, and the shuttle rack are still engine primitives or a shader. The new meshes are a first stylized pass. `in-engine` is not art-director acceptance.
+No third-party model, texture, audio, or font is imported. The barn, the farmhand, the grove trees, the workshop shed, the loom beam, the shuttle, the plot marker, and the valley ground were generated in Blender for this project. The selection ring, the fiber plot, the barn loft, and the shuttle rack are still engine primitives. The new meshes are a first stylized pass. `in-engine` is not art-director acceptance.
 
 | Id | Scene node | Source | Export | Author | License | Materials | Polys | Animation | Scenes | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `terrain.placeholder` | `PlaceholderTerrain` | `assets/shaders/placeholder_terrain.gdshader` on a 48×48 subdivided `PlaneMesh` | n/a | in-engine shader | project original | shader albedo, no textures | generated | none | `farm_stage.tscn` | placeholder |
+| `terrain.valley.v1` | `PlaceholderTerrain` | `tools/blender/terrain.py` | `assets/models/terrain.glb` | Blender script in this repo | original, project-authored | flat principled colors, no textures | 32768 tris | none | `scenes/props/terrain.tscn` in `farm_stage.tscn` | in-engine |
 | `building.barn.v1` | `Barn` | `tools/blender/barn.py` | `assets/models/barn.glb` | Blender script in this repo | project original, commercial use allowed | flat principled colors, no textures | 1294 tris | none | `scenes/buildings/barn.tscn` | in-engine |
 | `prop.tree.v1` | `PlaceholderTreeA/B/C` | `tools/blender/tree.py` | `assets/models/tree.glb` | Blender script in this repo | original, project-authored | flat principled colors, no textures | 2416 tris | none | `scenes/props/tree.tscn` in `farm_stage.tscn` | in-engine |
 | `character.farmhand.v1` | `Farmhand`, `WorkshopWorker` | `tools/blender/farmhand.py` | `assets/models/farmhand.glb` | Blender script in this repo | project original, commercial use allowed | flat principled colors, no textures | 10340 tris | skeleton `Armature`, clips `idle`, `walk`, and `work`, in-place | `scenes/characters/farmhand.tscn`, `scenes/characters/workshop_worker.tscn` | in-engine |
@@ -19,7 +19,7 @@ No third-party model, texture, audio, or font is imported. The barn, the farmhan
 | `shuttle.placeholder` | `PlaceholderShuttleRack` | boxes in `scenes/buildings/placeholder_shuttle_rack.tscn` | n/a | in-engine primitives | project original | flat colors | primitive | none | `first_farm.tscn` | placeholder |
 | `icon.game` | project icon | `icon.svg` | svg | in-repo vector | project original | flat fills | n/a | none | project settings | block-out icon, not marketing art |
 
-External source URL for every glTF file: none. The box barn, the sine-wave walker, the cylinder trees, the box shed, and the box flag are no longer instanced. `in-engine` means Godot imports the glTF and a scene instances it. It does not mean art-director acceptance. Commercial use of the project-authored meshes is allowed because this project made them.
+External source URL for every glTF file: none. The box barn, the sine-wave walker, the cylinder trees, the box shed, the box flag, and the flat terrain shader are no longer instanced. `in-engine` means Godot imports the glTF and a scene instances it. It does not mean art-director acceptance. Commercial use of the project-authored meshes is allowed because this project made them.
 
 Polygon counts are omitted for primitives because Godot generates them and they are not an art budget.
 

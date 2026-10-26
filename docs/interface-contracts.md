@@ -144,7 +144,7 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 
 The main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is `res://scenes/farm/first_farm.tscn` and instances `scenes/farm/farm_stage.tscn`.
 
-Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA` (and B and C, each a glTF, no primitive trunk), `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker` (glTF), `PlaceholderCrop`, `PlaceholderWorkshop` (shed, beam, and shuttle glTF), `PlaceholderBarnLoft`, `WorkshopWorker` (`work` clip), and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
+Tests require `Stage/PlaceholderTerrain` (valley glTF, flat yard, dirt path, and a hill), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA` (and B and C, each a glTF, no primitive trunk), `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker` (glTF), `PlaceholderCrop`, `PlaceholderWorkshop` (shed, beam, and shuttle glTF), `PlaceholderBarnLoft`, `WorkshopWorker` (`work` clip), and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
 
 `PlaceholderWorkshop` sits at `WorkshopRig.WORLD_POSITION` `(6.4, 0, 2.8)`. `advance(delta, false)` does not spin the loom. `advance(delta, true)` does. The scene sets `operating` from `Workshop.is_busy()`. The shed mesh does not own that spin. `LoomArm` and `Shuttle` are the glTF nodes the rig rotates and slides.
 

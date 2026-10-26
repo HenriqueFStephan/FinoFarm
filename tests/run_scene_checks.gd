@@ -67,9 +67,9 @@ func _farm() -> String:
 	]:
 		if farm.get_node_or_null(node_name) == null:
 			return "missing %s" % node_name
-	var terrain := farm.get_node("Stage/PlaceholderTerrain") as MeshInstance3D
-	if not (terrain.get_active_material(0) is ShaderMaterial):
-		return "terrain is not using the placeholder shader"
+	var valley := _valley(farm.get_node("Stage/PlaceholderTerrain"))
+	if valley != "":
+		return valley
 	if farm.get_node("Stage/Barn").find_children("*", "MeshInstance3D", true, false).is_empty():
 		return "barn has no imported mesh"
 	for tree_name in ["PlaceholderTreeA", "PlaceholderTreeB", "PlaceholderTreeC"]:
@@ -360,6 +360,61 @@ func _crew(session: FarmSession) -> String:
 	var crew_button := session.get_node("Hud/HudRoot/ActionColumn/CrewButton") as Button
 	if not crew_button.visible:
 		return "crew hidden after the lesson"
+	return ""
+
+
+func _valley(terrain: Node) -> String:
+	var model_reason := _gltf_child(terrain, "Model", "terrain")
+	if model_reason != "":
+		return model_reason
+	var meshes := terrain.find_children("*", "MeshInstance3D", true, false)
+	if meshes.is_empty():
+		return "terrain has no mesh instance"
+	var saw_hill := false
+	var saw_path := false
+	var saw_grass := false
+	var vert_count := 0
+	for mesh_node in meshes:
+		var instance := mesh_node as MeshInstance3D
+		if instance.get_active_material(0) is ShaderMaterial:
+			return "terrain is still using the edge shader"
+		var mesh := instance.mesh
+		if mesh == null:
+			return "terrain mesh missing"
+		var xf := instance.global_transform
+		for surface in mesh.get_surface_count():
+			var mat := mesh.surface_get_material(surface) as StandardMaterial3D
+			if mat == null:
+				return "terrain surface has no material"
+			var albedo := mat.albedo_color
+			var is_path := albedo.r > albedo.g + 0.02
+			var is_grass := albedo.g > albedo.r + 0.02
+			var arrays: Array = mesh.surface_get_arrays(surface)
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			vert_count += verts.size()
+			for i in verts.size():
+				var world: Vector3 = xf * verts[i]
+				var yard := maxf(absf(world.x), absf(world.z))
+				if yard <= 8.7 and world.y > 0.06:
+					return "valley floor rose to %.3f at %s" % [world.y, str(world)]
+				if yard <= 3.6 and absf(world.y) > 0.04:
+					return "barn pad height %.3f" % world.y
+				if world.y < -0.04:
+					return "terrain dipped below the pad"
+				if world.y > 1.4:
+					saw_hill = true
+				if is_grass and yard >= 4.0 and yard <= 5.1:
+					saw_grass = true
+				if is_path and yard >= 5.7 and yard <= 6.7 and absf(world.y) <= 0.04:
+					saw_path = true
+	if vert_count < 1000:
+		return "terrain mesh is too coarse"
+	if not saw_hill:
+		return "terrain has no hills"
+	if not saw_path:
+		return "dirt path is missing"
+	if not saw_grass:
+		return "valley grass is missing"
 	return ""
 
 

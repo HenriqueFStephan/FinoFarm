@@ -1,6 +1,6 @@
 # FinoFarm art bible
 
-Status: cozy stylized direction. The barn, the farmhand, the grove trees, the workshop shed, and the plot marker are in-engine models. They are a first stylized pass, not approved final art. Terrain, the fiber plot, the selection ring, the barn loft, and the shuttle rack are still placeholders. The person at the loom is a second instance of the farmhand mesh, not a new character.
+Status: cozy stylized direction. The barn, the farmhand, the grove trees, the workshop shed, the plot marker, and the valley ground are in-engine models. They are a first stylized pass, not approved final art. The fiber plot, the selection ring, the barn loft, and the shuttle rack are still placeholders. The person at the loom is a second instance of the farmhand mesh, not a new character.
 
 ## Target
 
@@ -16,9 +16,9 @@ These hex values are the materials on the first scene. Final textures stay in th
 
 | Role | Hex | Use on the first scene |
 | --- | --- | --- |
-| Grass light | `#4D7A3D` | Terrain shader `grass_a` |
-| Grass shadow | `#295224` | Terrain shader `grass_b` |
-| Path | `#855E33` | Dirt loop painted in the terrain shader |
+| Grass light | `#4D7A3D` | Valley floor and lower slopes |
+| Grass shadow | `#295224` | Higher hills on the valley mesh |
+| Path | `#855E33` | Square dirt loop on the valley mesh |
 | Barn wall | `#EDE0C4` | Placeholder barn walls |
 | Barn base | `#735737` | Placeholder slab |
 | Roof | `#8C4636` | Placeholder roof |
@@ -38,7 +38,7 @@ Interface surfaces, when UI arrives, use warm cream panels (`#F3E6C8` range) and
 
 | Node | What it actually is | Status |
 | --- | --- | --- |
-| `PlaceholderTerrain` | Subdivided plane. Shader fakes hills at the edges and a square dirt loop. The center is flat so the character does not sink. | placeholder |
+| `PlaceholderTerrain` | glTF from `tools/blender/terrain.py`. Flat yard, the same square dirt loop, and rounded hills outside the plot grid. The barn pad stays at ground height. | in-engine, first terrain pass |
 | `Barn` | glTF from `tools/blender/barn.py`. Gable roof, doors, windows, cupola. Flat colors from this palette. No textures. | in-engine, not accepted final art |
 | `PlaceholderTreeA`, `PlaceholderTreeB`, `PlaceholderTreeC` | One glTF from `tools/blender/tree.py`, three times, with different scale and yaw. Tapered trunk and a lumpy canopy. | in-engine, first stylized pass |
 | `Farmhand` | glTF from `tools/blender/farmhand.py`. One skin, `idle`, `walk`, and `work` clips. The model child is scaled `1.55` so the figure reads at the default camera. | in-engine, not accepted final art |
@@ -50,7 +50,7 @@ Interface surfaces, when UI arrives, use warm cream panels (`#F3E6C8` range) and
 | `PlaceholderBarnLoft` | A box room, a box roof, and a teal window, shown after the loft is bought. | placeholder |
 | `PlaceholderShuttleRack` | A wood rail and two amber boxes on the shed roof, shown after the shuttle rack is bought. | placeholder |
 
-Do not describe the terrain, ring, crop, loft, or shuttle rack as finished art. Do not describe the barn, the farmhand, the grove trees, the workshop shed, the plot marker, or the workshop worker as approved final assets. The trees, the shed, and the marker are the first stylized pass. The worker is the farmhand mesh again, not a portrait of Alex or Bram. `work` is an in-place arm pass while the loom job is busy. Carry, celebrate, and rest clips are not in this build. The old box walker and its sine-wave swing are gone. The old cylinder trees, box shed, and box flag are gone. The loom spin is a presentation of the busy flag, not a finished machine animation.
+Do not describe the ring, crop, loft, or shuttle rack as finished art. Do not describe the barn, the farmhand, the grove trees, the workshop shed, the plot marker, the valley ground, or the workshop worker as approved final assets. The trees, the shed, the marker, and the ground are the first stylized pass. The worker is the farmhand mesh again, not a portrait of Alex or Bram. `work` is an in-place arm pass while the loom job is busy. Carry, celebrate, and rest clips are not in this build. The old box walker and its sine-wave swing are gone. The old cylinder trees, box shed, and box flag are gone. The old flat terrain plane and its edge shader are gone. The loom spin is a presentation of the busy flag, not a finished machine animation.
 
 ## Camera readability
 

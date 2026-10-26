@@ -1,10 +1,10 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/buildings/barn.tscn" id="1_barn"]
 [ext_resource type="PackedScene" path="res://scenes/characters/farmhand.tscn" id="2_hand"]
 [ext_resource type="Script" path="res://scripts/camera/farm_camera.gd" id="3_camera"]
-[ext_resource type="Shader" path="res://assets/shaders/placeholder_terrain.gdshader" id="4_shader"]
 [ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="5_tree"]
+[ext_resource type="PackedScene" path="res://scenes/props/terrain.tscn" id="6_terrain"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.32, 0.55, 0.86, 1)
@@ -24,17 +24,6 @@ ambient_light_energy = 0.28
 tonemap_mode = 2
 tonemap_exposure = 1.0
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
-size = Vector2(48, 48)
-subdivide_width = 48
-subdivide_depth = 48
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_terrain"]
-shader = ExtResource("4_shader")
-shader_parameter/grass_a = Color(0.3, 0.48, 0.24, 1)
-shader_parameter/grass_b = Color(0.16, 0.32, 0.14, 1)
-shader_parameter/path_color = Color(0.52, 0.37, 0.2, 1)
-
 [node name="FarmStage" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -47,9 +36,7 @@ light_energy = 0.9
 shadow_enabled = true
 directional_shadow_max_distance = 48.0
 
-[node name="PlaceholderTerrain" type="MeshInstance3D" parent="."]
-mesh = SubResource("PlaneMesh_ground")
-surface_material_override/0 = SubResource("ShaderMaterial_terrain")
+[node name="PlaceholderTerrain" parent="." instance=ExtResource("6_terrain")]
 
 [node name="Barn" parent="." instance=ExtResource("1_barn")]
 
