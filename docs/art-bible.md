@@ -38,7 +38,7 @@ Interface surfaces, when UI arrives, use warm cream panels (`#F3E6C8` range) and
 
 | Node | What it actually is | Status |
 | --- | --- | --- |
-| `PlaceholderTerrain` | glTF from `tools/blender/terrain.py`. Flat yard, the same square dirt loop, and rounded hills outside the plot grid. The barn pad stays at ground height. | in-engine, first terrain pass |
+| `PlaceholderTerrain` | glTF from `tools/blender/terrain.py`. Flat yard, the same square dirt loop, and a continuous bank of rounded hills outside the plot grid. The barn pad stays at ground height. | in-engine, first terrain pass |
 | `Barn` | glTF from `tools/blender/barn.py`. Gable roof, doors, windows, cupola. Flat colors from this palette. No textures. | in-engine, not accepted final art |
 | `PlaceholderTreeA`, `PlaceholderTreeB`, `PlaceholderTreeC` | One glTF from `tools/blender/tree.py`, three times, with different scale and yaw. Tapered trunk and a lumpy canopy. | in-engine, first stylized pass |
 | `Farmhand` | glTF from `tools/blender/farmhand.py`. One skin, `idle`, `walk`, and `work` clips. The model child is scaled `1.55` so the figure reads at the default camera. | in-engine, not accepted final art |

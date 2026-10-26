@@ -371,6 +371,7 @@ func _valley(terrain: Node) -> String:
 	if meshes.is_empty():
 		return "terrain has no mesh instance"
 	var saw_hill := false
+	var saw_bank := false
 	var saw_path := false
 	var saw_grass := false
 	var vert_count := 0
@@ -401,8 +402,12 @@ func _valley(terrain: Node) -> String:
 					return "barn pad height %.3f" % world.y
 				if world.y < -0.04:
 					return "terrain dipped below the pad"
+				if yard > 9.2 and yard <= 10.6 and world.y > 0.55:
+					return "yard edge stepped to %.3f at %s" % [world.y, str(world)]
 				if world.y > 1.4:
 					saw_hill = true
+				if yard >= 12.2 and yard <= 14.8 and world.y > 0.45:
+					saw_bank = true
 				if is_grass and yard >= 4.0 and yard <= 5.1:
 					saw_grass = true
 				if is_path and yard >= 5.7 and yard <= 6.7 and absf(world.y) <= 0.04:
@@ -411,6 +416,8 @@ func _valley(terrain: Node) -> String:
 		return "terrain mesh is too coarse"
 	if not saw_hill:
 		return "terrain has no hills"
+	if not saw_bank:
+		return "terrain bank did not rise"
 	if not saw_path:
 		return "dirt path is missing"
 	if not saw_grass:
