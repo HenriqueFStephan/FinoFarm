@@ -42,7 +42,7 @@ func _ready() -> void:
 		root,
 		"credits",
 		"Credits",
-		"FinoFarm. The barn and the farmhand were modeled in Blender for this project. Terrain, trees, and the plot marker are still placeholders. No third-party model packs are in this build."
+		"FinoFarm. The barn, the farmhand, the grove trees, the workshop shed, and the plot marker were modeled in Blender for this project. Those props are a first stylized pass, not final art. Terrain, the fiber plot, the selection ring, the barn loft, and the shuttle rack are still placeholders. No third-party model packs are in this build."
 	)
 	_show("home")
 

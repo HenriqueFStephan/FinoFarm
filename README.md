@@ -50,6 +50,6 @@ godot --path . --display-driver x11 --rendering-driver opengl3 \
 
 ## Environment bootstrap
 
-`.cursor/install.sh` is the cloud-agent install. It pins Godot 4.7.2 standard (GDScript, not .NET), Blender 5.2.3, and Git LFS. Do not remove it. Large binary art (`glb`, `png`, `blend`, audio) is marked for Git LFS in `.gitattributes`. No LFS objects are committed yet.
+`.cursor/install.sh` is the cloud-agent install. It pins Godot 4.7.2 standard (GDScript, not .NET), Blender 5.2.3, and Git LFS. Do not remove it. Large binary art (`glb`, `png`, `blend`, audio) is marked for Git LFS in `.gitattributes`. The glTF models are stored with Git LFS.
 
-The barn and the farmhand are in-engine models, not approved final art. Terrain, trees, the plot marker, the fiber plot, the workshop, and the barn loft are still placeholders. See the art bible before calling any of them finished art.
+The barn, the farmhand, the grove trees, the workshop shed, and the plot marker are in-engine models, not approved final art. Terrain, the fiber plot, the barn loft, and the shuttle rack are still placeholders. See the art bible before calling any of them finished art.

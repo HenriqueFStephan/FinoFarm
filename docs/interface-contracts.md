@@ -144,9 +144,9 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 
 The main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is `res://scenes/farm/first_farm.tscn` and instances `scenes/farm/farm_stage.tscn`.
 
-Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA`, `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker`, `PlaceholderCrop`, `PlaceholderWorkshop`, `PlaceholderBarnLoft`, `WorkshopWorker` (`work` clip), and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
+Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA` (and B and C, each a glTF, no primitive trunk), `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker` (glTF), `PlaceholderCrop`, `PlaceholderWorkshop` (shed, beam, and shuttle glTF), `PlaceholderBarnLoft`, `WorkshopWorker` (`work` clip), and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
 
-`PlaceholderWorkshop` sits at `WorkshopRig.WORLD_POSITION` `(6.4, 0, 2.8)`. `advance(delta, false)` does not spin the loom. `advance(delta, true)` does. The scene sets `operating` from `Workshop.is_busy()`.
+`PlaceholderWorkshop` sits at `WorkshopRig.WORLD_POSITION` `(6.4, 0, 2.8)`. `advance(delta, false)` does not spin the loom. `advance(delta, true)` does. The scene sets `operating` from `Workshop.is_busy()`. The shed mesh does not own that spin. `LoomArm` and `Shuttle` are the glTF nodes the rig rotates and slides.
 
 `WorkshopWorker` stands in front of that shed. It is hidden until someone is assigned. While the loom is busy it plays the imported `work` clip. While assigned and idle it plays `idle`. `WorkerName` is that person's name. The mesh is the same farmhand glTF, not a second character. The path `Farmhand` is still not an employee.
 
@@ -154,7 +154,7 @@ Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (import
 
 `PlaceholderShuttleRack` starts hidden. It is shown when `shuttle_rack` is owned. The mesh is a placeholder on the shed roof: a rail and two amber shuttles. It is not finished art.
 
-`PlaceholderCrop` follows the marker. `show_stage` hides it when the name is `empty`, and shows the ready tuft only for `ready`.
+`PlaceholderCrop` follows the marker. `show_stage` hides it when the name is `empty`, shows the sprout from `sprout` onward, the leaf from `leaf` onward, and the ready tuft only for `ready`. The stake sits on the rim so those stages stay visible.
 
 The menu has `ContinueButton`, `MyFarmsButton`, `NewGameButton`, `SettingsButton`, `CreditsButton`, and `ExitButton` over the same stage.
 

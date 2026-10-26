@@ -1,6 +1,6 @@
 # FinoFarm game design
 
-Status: Milestone 5 adds one paid loom rule on top of the Milestone 4 production choice. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
+Status: Milestone 5 adds one paid loom rule on top of the Milestone 4 production choice. Milestone 6's first slice replaces the grove trees, the workshop shed, and the plot marker with a stylized pass. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
 
 ## Player fantasy
 
@@ -39,7 +39,7 @@ The intro order `intro_bundle` pays 180 for one Fiber Bundle. The lane order `la
 Launch Godot. The main menu sits on a 3D farm. New Game asks for a name and one of the four regions, writes a schema-1 save, and opens that farm. My Farms lists every save. Continue is available once a save exists.
 
 - Pan, zoom, and orbit the same three-quarter camera.
-- See terrain, a dirt loop, one barn, three trees, and a farmhand whose walk clip plays while they move.
+- See terrain, a dirt loop, one barn, three grove trees, an open workshop shed, and a farmhand whose walk clip plays while they move. The trees, the shed, and the plot stake are a first stylized pass. The fiber plot still changes shape at row, sprout, leaf, and ready.
 - Place, move, and remove one plot marker on the grid. Placing it starts Verdant Fiber. Clicking the barn selects it. Clicking the workshop shed opens the bundle job.
 - The HUD shows the farm name, region, funds, inventory, and a short prompt from Mara, the advisor voice. Mara is text on the HUD. She is not a new character model.
 - Harvest the ready plot, bundle two fibers, deliver the trail-stall order, and buy the barn loft. The tutorial blocks those buttons until the matching step. After the loft, the prompt says the loop is done.
