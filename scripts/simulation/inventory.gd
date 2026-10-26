@@ -33,6 +33,16 @@ func amount(resource_id: String, grade: int) -> int:
 	return int(_amounts.get(_key(resource_id, grade), 0))
 
 
+## Lowest valid grade that already holds at least `amount`. 0 if none do.
+func lowest_grade_with(resource_id: String, amount: int) -> int:
+	if amount <= 0:
+		return 0
+	for grade in [GradeScale.COMMON, GradeScale.FINE, GradeScale.SELECT]:
+		if self.amount(resource_id, grade) >= amount:
+			return grade
+	return 0
+
+
 func snapshot() -> Dictionary:
 	var copy := {}
 	for key in _amounts.keys():

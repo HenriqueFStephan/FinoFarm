@@ -32,6 +32,9 @@ godot --headless --path . -s res://tests/run_save_load_tests.gd
 echo "placement"
 godot --headless --path . -s res://tests/run_placement_tests.gd
 
+echo "economy"
+godot --headless --path . -s res://tests/run_economy_tests.gd
+
 echo "scene"
 godot --headless --path . -s res://tests/run_scene_checks.gd
 

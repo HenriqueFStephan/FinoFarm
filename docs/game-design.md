@@ -1,6 +1,6 @@
 # FinoFarm game design
 
-Status: Milestone 0. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
+Status: Milestone 2 loop is in this branch. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
 
 ## Player fantasy
 
@@ -27,7 +27,11 @@ The first recipes are a textile chain, defined in `scripts/simulation/catalog.gd
 | `bundle_fiber` | 2 Verdant Fiber | 1 Fiber Bundle | 4 |
 | `pack_textile` | 1 Fiber Bundle + 1 Seal Wax | 1 Packed Textile | 3 |
 
-One tick is one simulated second. Splitting that second across frames does not change the result. The farm scene does not run this workshop yet. Milestone 2 puts it on screen. Tests cover it now.
+One tick is one simulated second. Splitting that second across frames does not change the result. The farm scene runs the bundle recipe through `SimStepper`. `pack_textile` stays in the catalog for a later chain. It is not on the order board yet.
+
+Verdant Fiber on the placed plot uses the same clock. `ResourceCatalog.growth` sets 4 visual stages (row, sprout, leaf, ready), 2 ticks each, yield 2, grade common. The grade is assigned by that table. Nothing in the plot computes a grow recipe.
+
+The intro order `intro_bundle` pays 180 for one Fiber Bundle. The barn loft costs 400. The richest starting purse is Tropical Valley at 360, so the loft is unaffordable until that order pays. Innovation Plains starts at 240 and can afford it after the same payment (20 left).
 
 ## What this build lets the player do
 
@@ -35,10 +39,11 @@ Launch Godot. The main menu sits on a 3D farm. New Game asks for a name and one 
 
 - Pan, zoom, and orbit the same three-quarter camera.
 - See terrain, a dirt loop, one barn, three trees, and a farmhand whose walk clip plays while they move.
-- Place, move, and remove one plot marker on the grid. Clicking the barn selects it.
-- The HUD shows the farm name, region, and funds from the save.
+- Place, move, and remove one plot marker on the grid. Placing it starts Verdant Fiber. Clicking the barn selects it. Clicking the workshop shed opens the bundle job.
+- The HUD shows the farm name, region, funds, inventory, and a short prompt from Mara, the advisor voice. Mara is text on the HUD. She is not a new character model.
+- Harvest the ready plot, bundle two fibers, deliver the trail-stall order, and buy the barn loft. The tutorial blocks those buttons until the matching step. After the loft, the prompt says the loop is done.
 
-Hiring, orders, and the workshop screen are still later milestones. See [the vertical slice](vertical-slice-m1.md). The workshop classes stay headless.
+Hiring and `pack_textile` are still later. See [the vertical slice](vertical-slice-m1.md) for what Milestone 1 added. The Milestone 2 scene is the one that runs the workshop.
 
 ## Camera
 
@@ -48,7 +53,7 @@ The camera orbits a focus point. Pitch stays between about 20° and 66° so the 
 
 Plan, operate, produce, fulfill an order, earn, improve, expand, automate.
 
-The early-game teaching sequence in the charter (inherit a farm, restore a field, finish one production cycle, deliver an order, hire, upgrade) is the Milestone 2 tutorial. Milestone 1 only has to reach a farm you created and can look around, with save/load and a real character. Do not pretend the walking placeholder completes that loop.
+The Milestone 2 tutorial is the part of that sequence this build can play: place a plot, wait out the fiber timer, harvest, bundle, deliver, and buy the loft. Hiring and job assignment stay Milestone 3. Do not treat the walking farmhand as an employee.
 
 ## Characters
 
@@ -62,4 +67,4 @@ Later data, not this build. The charter's four starting sketches (Northern Homes
 
 ## Out of scope until a later milestone
 
-Main menu, saves, placement, inventory UI, orders, wages, research, audio, weather, and final models.
+Wages, hiring, research, audio, weather, `pack_textile` on the board, and final models. The menu, saves, placement, inventory line, one order, and the bundle workshop are in.

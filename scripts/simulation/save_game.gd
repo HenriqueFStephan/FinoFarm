@@ -28,6 +28,15 @@ var camera: Dictionary = {
 }
 var tutorial_step := 0
 var marker: Dictionary = {}
+var plot: Dictionary = {
+	"planted": false,
+	"resource_id": "verdant_fiber",
+	"stage": 0,
+	"ticks_remaining": 0,
+	"grade": 1,
+}
+var orders: Dictionary = {"intro_bundle": "open"}
+var upgrades: Dictionary = {}
 
 
 static func create_new(farm_name: String, region_id: String) -> Dictionary:
@@ -70,6 +79,9 @@ func to_dict() -> Dictionary:
 		"camera": camera.duplicate(true),
 		"tutorial_step": tutorial_step,
 		"marker": marker.duplicate(true),
+		"plot": plot.duplicate(true),
+		"orders": orders.duplicate(true),
+		"upgrades": upgrades.duplicate(true),
 	}
 
 
@@ -102,6 +114,15 @@ static func from_dict(data: Dictionary) -> Dictionary:
 	var marker_value: Variant = _marker_from(data.get("marker", {}))
 	if marker_value == null:
 		return _fail("bad_marker")
+	var plot_value: Variant = _plot_from(data.get("plot", {}))
+	if plot_value == null:
+		return _fail("bad_plot")
+	var orders_value: Variant = _orders_from(data.get("orders", {}))
+	if orders_value == null:
+		return _fail("bad_orders")
+	var upgrades_value: Variant = _upgrades_from(data.get("upgrades", {}))
+	if upgrades_value == null:
+		return _fail("bad_upgrades")
 	var game := SaveGame.new()
 	game.schema = SCHEMA
 	game.farm_id = str(data["farm_id"])
@@ -116,6 +137,9 @@ static func from_dict(data: Dictionary) -> Dictionary:
 	game.camera = camera_value
 	game.tutorial_step = int(data.get("tutorial_step", 0))
 	game.marker = (marker_value as Dictionary).duplicate(true)
+	game.plot = (plot_value as Dictionary).duplicate(true)
+	game.orders = (orders_value as Dictionary).duplicate(true)
+	game.upgrades = (upgrades_value as Dictionary).duplicate(true)
 	return {"ok": true, "error": "", "game": game}
 
 
@@ -229,6 +253,78 @@ static func _marker_from(value: Variant) -> Variant:
 	if not raw.has("x") or not raw.has("z"):
 		return null
 	return {"x": int(raw["x"]), "z": int(raw["z"])}
+
+
+static func _default_plot() -> Dictionary:
+	return {
+		"planted": false,
+		"resource_id": "verdant_fiber",
+		"stage": 0,
+		"ticks_remaining": 0,
+		"grade": GradeScale.COMMON,
+	}
+
+
+static func _plot_from(value: Variant) -> Variant:
+	if typeof(value) != TYPE_DICTIONARY:
+		return null
+	var raw: Dictionary = value
+	if raw.is_empty():
+		return _default_plot()
+	var resource_id := str(raw.get("resource_id", "verdant_fiber"))
+	var spec := ResourceCatalog.growth(resource_id)
+	if spec.is_empty():
+		return null
+	var stage := int(raw.get("stage", 0))
+	var ticks := int(raw.get("ticks_remaining", 0))
+	var grade := int(raw.get("grade", GradeScale.COMMON))
+	if stage < 0 or stage >= int(spec["stage_count"]) or ticks < 0:
+		return null
+	if not GradeScale.is_valid(grade):
+		return null
+	return {
+		"planted": bool(raw.get("planted", false)),
+		"resource_id": resource_id,
+		"stage": stage,
+		"ticks_remaining": ticks,
+		"grade": grade,
+	}
+
+
+static func _orders_from(value: Variant) -> Variant:
+	if typeof(value) != TYPE_DICTIONARY:
+		return null
+	var raw: Dictionary = value
+	if raw.is_empty():
+		return {"intro_bundle": "open"}
+	var cleaned := {}
+	for key in raw.keys():
+		var order_id := str(key)
+		if ResourceCatalog.order(order_id).is_empty():
+			return null
+		var state := str(raw[key])
+		if state != "open" and state != "done":
+			return null
+		cleaned[order_id] = state
+	if not cleaned.has("intro_bundle"):
+		cleaned["intro_bundle"] = "open"
+	return cleaned
+
+
+static func _upgrades_from(value: Variant) -> Variant:
+	if typeof(value) != TYPE_DICTIONARY:
+		return null
+	var raw: Dictionary = value
+	var cleaned := {}
+	for key in raw.keys():
+		var upgrade_id := str(key)
+		if ResourceCatalog.upgrade(upgrade_id).is_empty():
+			return null
+		if typeof(raw[key]) != TYPE_BOOL:
+			return null
+		if bool(raw[key]):
+			cleaned[upgrade_id] = true
+	return cleaned
 
 
 static func _fail(reason: String) -> Dictionary:

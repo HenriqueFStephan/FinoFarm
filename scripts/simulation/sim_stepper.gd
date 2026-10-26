@@ -3,6 +3,7 @@ extends RefCounted
 
 var clock: SimClock
 var workshop: Workshop
+var plot: CropPlot
 
 
 func _init(starting_clock: SimClock, starting_workshop: Workshop) -> void:
@@ -14,4 +15,6 @@ func step(delta_seconds: float) -> Dictionary:
 	var ticks := clock.advance(delta_seconds)
 	if ticks <= 0:
 		return {}
+	if plot != null:
+		plot.tick(ticks)
 	return workshop.tick(ticks)

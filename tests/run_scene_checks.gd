@@ -58,6 +58,9 @@ func _farm() -> String:
 		"Stage/Farmhand",
 		"Stage/FarmCamera",
 		"PlaceholderPlotMarker",
+		"PlaceholderCrop",
+		"PlaceholderWorkshop",
+		"PlaceholderBarnLoft",
 		"Hud",
 	]:
 		if farm.get_node_or_null(node_name) == null:
@@ -141,6 +144,9 @@ func _farm() -> String:
 		return "right pan landed at %s" % str(camera.focus)
 	if absf(camera.global_position.distance_to(camera.focus) - camera.distance) > 0.05:
 		return "pan left the camera radius"
+	var cycle_reason := _economy(farm)
+	if cycle_reason != "":
+		return cycle_reason
 	var screen: Vector2 = camera.unproject_position(Vector3(4, 0, 4))
 	var hit: Variant = PlotGrid.ground_hit(
 		camera.project_ray_origin(screen),
@@ -151,6 +157,61 @@ func _farm() -> String:
 	root.remove_child(farm)
 	farm.free()
 	library.wipe()
+	return ""
+
+
+func _economy(farm) -> String:
+	var session := farm as FarmSession
+	var workshop := session.get_node("PlaceholderWorkshop") as Node3D
+	if workshop.global_position.distance_to(WorkshopRig.WORLD_POSITION) > 0.05:
+		return "workshop at %s" % str(workshop.global_position)
+	var loft := session.get_node("PlaceholderBarnLoft") as Node3D
+	if loft.visible:
+		return "loft starts visible"
+	var crop := session.get_node("PlaceholderCrop") as CropVisual
+	session.loop.plot.plant()
+	session.refresh_presentation()
+	if not crop.visible:
+		return "seeded crop hidden"
+	session.loop.plot.stage = 3
+	session.loop.plot.ticks_remaining = 0
+	session.refresh_presentation()
+	if not crop.ready_visible():
+		return "ready tuft hidden"
+	session.loop.plot.clear()
+	session.refresh_presentation()
+	if crop.visible:
+		return "crop stayed after clear"
+	var rig := workshop as WorkshopRig
+	var idle_angle := rig.spin_angle()
+	rig.advance(0.5, false)
+	if absf(rig.spin_angle() - idle_angle) > 0.001:
+		return "loom moved while idle"
+	rig.advance(0.5, true)
+	if absf(rig.spin_angle() - idle_angle) < 0.2:
+		return "loom did not move while operating"
+	var before := session.game.funds
+	var cycle := session.play_intro_cycle(6.0, -4.0)
+	if cycle != "":
+		return cycle
+	var expected := before + 180 - 400
+	if session.game.funds != expected:
+		return "cycle funds %d" % session.game.funds
+	if not loft.visible:
+		return "loft hidden after purchase"
+	if session.loop.tutorial.step != TutorialTrack.DONE:
+		return "tutorial step %d" % session.loop.tutorial.step
+	if session.loop.inventory.amount("fiber_bundle", GradeScale.COMMON) != 0:
+		return "bundle remained"
+	var funds_label := session.get_node("Hud/HudRoot/Top/Row/FundsLabel") as Label
+	if funds_label.text != "Funds %d" % expected:
+		return "hud funds %s" % funds_label.text
+	var tutorial := session.get_node("Hud/HudRoot/TutorialPanel/TutorialText") as Label
+	if not tutorial.text.contains("loft"):
+		return "tutorial %s" % tutorial.text
+	var order_body := session.get_node("Hud/HudRoot/OrderPanel/Box/OrderBody") as Label
+	if not order_body.text.contains("Delivered"):
+		return "order %s" % order_body.text
 	return ""
 
 

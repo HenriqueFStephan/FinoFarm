@@ -17,7 +17,8 @@ The script prints `godot <version>`, then:
 4. `godot --headless --path . -s res://tests/run_region_tests.gd`
 5. `godot --headless --path . -s res://tests/run_save_load_tests.gd`
 6. `godot --headless --path . -s res://tests/run_placement_tests.gd`
-7. `godot --headless --path . -s res://tests/run_scene_checks.gd`
+7. `godot --headless --path . -s res://tests/run_economy_tests.gd`
+8. `godot --headless --path . -s res://tests/run_scene_checks.gd`
 
 Exit code is the Godot exit code. `set -e` stops on the first failure.
 
@@ -35,6 +36,19 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 - The clock is independent of how time is sliced, including a negative delta.
 - Two steppers, one fed `4.0` seconds and one fed eight `0.5` second steps, match.
 
+## What the economy tests cover
+
+`tests/run_economy_tests.gd` also extends `SceneTree` and does not load the farm scene.
+
+- Growth timing comes from the catalog. The plot is not ready one tick early. Extra ticks do not raise the yield.
+- A failed harvest leaves inventory alone.
+- Six seconds in one step and twelve half-seconds leave the same plot stage.
+- A missing Fiber Bundle does not pay. A paid order does not pay twice.
+- 399 funds cannot buy the loft. 400 can, and a second buy does not charge again.
+- Tropical Valley cannot afford the loft before the sale. Innovation Plains can afford it after one order.
+- `FarmLoop` walks place, grow, harvest, bundle, deliver, and buy, and ends on the done step.
+- Plot, order, and upgrade state round-trip. A schema-1 dict without those keys still loads. Stage `9` is rejected.
+
 ## What the scene checks cover
 
 `tests/run_scene_checks.gd` loads scenes after the tree is up (`call_deferred`, because `_initialize` runs too early).
@@ -46,6 +60,8 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 - A saved marker appears on its cell. The player can move it, remove it, and a barn cell selects the barn instead.
 - Zoom clamps, orbit distance holds, and yaw-0 pan matches the contract.
 - The menu exposes Continue, My Farms, New Game, Settings, Credits, and Exit. Continue starts disabled. Two created farms show as cards. Region markers render the catalog fields.
+- The workshop, crop, and loft nodes exist. The loft starts hidden. The crop mesh follows the stage name. The loom does not move while idle and does move while operating.
+- `play_intro_cycle` on that farm changes funds by `+180 - 400`, shows the loft, and leaves the order delivered.
 
 `tests/run_region_tests.gd`, `tests/run_save_load_tests.gd`, and `tests/run_placement_tests.gd` do not instance a 3D scene. The save tests use a throwaway `user://` directory.
 

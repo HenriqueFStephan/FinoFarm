@@ -41,7 +41,8 @@ Scripts are `class_name` types under `scripts/simulation/`. They extend `RefCoun
 - Callers may split time however they want. `4.0` once and `0.5` eight times are the same tick count.
 - Negative or zero time returns `0` and does not move the clock.
 - `SimStepper.step(seconds)` advances the clock and ticks the workshop that many times.
-- The farm scene does not own a stepper yet. The first UI that shows production must use `SimStepper`, not its own timer.
+- If `plot` is set, the same ticks also advance that `CropPlot`. A stepper with no plot does not touch growth.
+- The farm scene's `FarmLoop.advance` calls `SimStepper.step`. It does not keep a second production timer.
 
 ## Presentation
 
@@ -74,16 +75,52 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 - `ground_hit(origin, direction)` intersects the y=0 plane. Upward rays miss.
 - `to_save()` is `{}` or `{x, z}`.
 
+### `CropPlot`
+
+- One plot, resource `verdant_fiber`. `plant` sets stage `0` and `ticks_remaining` from `ResourceCatalog.growth`.
+- Stages are `0` row, `1` sprout, `2` leaf, `3` ready. `stage_label` returns those words.
+- `ticks_per_stage` is `2`. Ready is `(stage_count - 1) * ticks_per_stage` ticks after planting (6).
+- The tick before that is not ready. Ticks after ready do not change the yield.
+- `harvest` adds `yield_amount` `2` at the catalog grade (`common`) and clears the plot. `not_ready` does not change inventory.
+- This is a visual stage timer. It is not a cultivation model.
+
+### `OrderBoard`
+
+- One order, `intro_bundle`: 1 `fiber_bundle`, reward `180`.
+- `try_fulfill` spends the lowest grade that covers the amount.
+- Failure codes: `unknown_order`, `missing_goods`, `already_done`. Funds and inventory stay as they were.
+- Success returns the new fund total and sets status `done`. A second call does not pay again.
+
+### `UpgradeShop`
+
+- `barn_loft` costs `400`.
+- `try_purchase` failure codes: `unknown_upgrade`, `short_funds`, `already_owned`. Funds stay put.
+- Success subtracts the cost and sets owned.
+
+### `TutorialTrack` and `FarmLoop`
+
+- Steps: `0` place, `1` grow, `2` harvest, `3` workshop, `4` wait for the bundle, `5` order, `6` loft, `7` done.
+- `FarmLoop` is what the farm scene calls. Harvest, bundle, deliver, and buy return `tutorial` until that step, and after `done` they stay available.
+- Removing the plot during grow or harvest rewinds to place.
+- `inventory_line()` is the HUD text.
+
 ### `FarmHud`
 
 - `bind(game)` sets the name, the region display name, and `Funds <n>` from the save.
+- `refresh(game, loop, barn_selected)` also sets the inventory line, Mara's prompt, and the last economy event from `FarmLoop`.
 - It does not keep its own copy of the numbers.
 
 ## Scene nodes
 
 The main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is `res://scenes/farm/first_farm.tscn` and instances `scenes/farm/farm_stage.tscn`.
 
-Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA`, `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker`, and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
+Tests require `Stage/PlaceholderTerrain` (shader material), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA`, `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker`, `PlaceholderCrop`, `PlaceholderWorkshop`, `PlaceholderBarnLoft`, and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
+
+`PlaceholderWorkshop` sits at `WorkshopRig.WORLD_POSITION` `(6.4, 0, 2.8)`. `advance(delta, false)` does not spin the loom. `advance(delta, true)` does. The scene sets `operating` from `Workshop.is_busy()`.
+
+`PlaceholderBarnLoft` starts hidden. It is shown when `barn_loft` is owned. The mesh is a placeholder.
+
+`PlaceholderCrop` follows the marker. `show_stage` hides it when the name is `empty`, and shows the ready tuft only for `ready`.
 
 The menu has `ContinueButton`, `MyFarmsButton`, `NewGameButton`, `SettingsButton`, `CreditsButton`, and `ExitButton` over the same stage.
 
@@ -106,6 +143,11 @@ Keys:
 - `camera` (`focus` as three numbers, `yaw`, `pitch`, `distance`)
 - `tutorial_step`
 - `marker` (`{}` or `{x, z}`)
+- `plot` (`planted`, `resource_id`, `stage`, `ticks_remaining`, `grade`). Missing or `{}` means not planted.
+- `orders` (`intro_bundle` is `open` or `done`). Missing or `{}` means the intro order is open.
+- `upgrades` (bool flags, currently `barn_loft`). Missing or `{}` means nothing is owned.
+
+A plot stage outside `0..3`, a bad grade, an unknown order id, or a non-bool upgrade value is rejected. Schema `2` is still rejected. Old schema-1 files that omit the three new keys still load.
 
 `create_new` requires a non-empty name of at most 32 characters and a catalog region. Starting funds are `RegionCatalog.PURSE - property_cost` (purse `500`, untuned). The file also stores 4 common Verdant Fiber so the inventory snapshot is real. That stack is not a grow recipe.
 
