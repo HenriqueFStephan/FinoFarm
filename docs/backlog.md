@@ -103,6 +103,20 @@ No new GitHub issues. These rows are the claim.
 
 GitHub issues #2 through #14 stay the Milestone 0 and 1 issues. Milestone 4 does not add another issue for the same work.
 
+## Milestone 5
+
+No new GitHub issues. These rows are the claim. This slice is the loom rule, not the rest of the charter's research tree.
+
+| Id | Issue | Title | Owner | Status | Depends on | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| FF-38 | — | Loom rule is paid in currency | `bc-40e75aa3-97f6-5ff0-ad36-fe4865111928` | in_review | FF-26 | `tests/run_automation_tests.gd` shows `loom_rule` costs 120. 119 does not buy it. A second buy does not charge again. The purchase is refused during Mara's lesson. |
+| FF-39 | — | Priority starts the matching recipe | `bc-40e75aa3-97f6-5ff0-ad36-fe4865111928` | in_review | FF-30, FF-33, FF-38 | With the rule owned, a ready plot, and a worker assigned, Fiber Bundle priority starts `bundle_fiber` and Fiber Cord priority starts `twist_cord`. |
+| FF-40 | — | A running job is not replaced | `bc-40e75aa3-97f6-5ff0-ad36-fe4865111928` | in_review | FF-39 | Changing priority while the loom is busy keeps the recipe and the remaining ticks. The next ready plot uses the new priority. |
+| FF-41 | — | Locked bench and Mara's lesson stay manual | `bc-40e75aa3-97f6-5ff0-ad36-fe4865111928` | in_review | FF-26, FF-38 | Without the unlock, and during the lesson, a ready plot and an assigned worker do not start the loom. Alex and Bram still differ. One harvest still cannot fill both orders. |
+| FF-42 | — | Priority control on the workshop card | `bc-40e75aa3-97f6-5ff0-ad36-fe4865111928` | in_review | FF-39 | The scene check hides `ResearchButton` during the lesson, shows the priority buttons only after the purchase, and a cord priority does not replace Alex's running bundle. |
+
+GitHub issues #2 through #14 stay the Milestone 0 and 1 issues. Milestone 5 does not add another issue for the same work.
+
 FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` unless they instance child scenes. Child scenes are the default.
 
 ## Environment
@@ -112,5 +126,5 @@ FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` 
 | FF-3 | Cloud or local. Needs Godot. A display is only for the capture. |
 | FF-7 | Cloud, with network access to official Godot templates. |
 | FF-8, FF-13, FF-18, FF-19 | Prefer a display. Headless import is necessary and not sufficient. |
-| FF-11, FF-12, FF-17 math, FF-21 through FF-37 rules | Cloud. Staff, economy, and priority tests must not require rendering. The order-board screenshot needs a display. |
+| FF-11, FF-12, FF-17 math, FF-21 through FF-42 rules | Cloud. Staff, economy, priority, and automation tests must not require rendering. The order-board and priority-control screenshots need a display. |
 | FF-9 | Human admin on GitHub. |

@@ -165,6 +165,22 @@ func buy_shuttle() -> String:
 	return err
 
 
+func buy_loom_rule() -> String:
+	var err := loop.buy_loom_rule(game)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func set_loom_priority(recipe_id: String) -> String:
+	var err := loop.set_loom_priority(recipe_id)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
 func play_intro_cycle(plot_x: float, plot_z: float) -> String:
 	var err := place_marker_at(plot_x, plot_z)
 	if err != "":
@@ -381,6 +397,10 @@ func _connect_hud() -> void:
 		hud.hire_requested.connect(hire_worker)
 	if not hud.assign_requested.is_connected(assign_worker):
 		hud.assign_requested.connect(assign_worker)
+	if not hud.research_pressed.is_connected(buy_loom_rule):
+		hud.research_pressed.connect(buy_loom_rule)
+	if not hud.priority_requested.is_connected(set_loom_priority):
+		hud.priority_requested.connect(set_loom_priority)
 
 
 func _on_remove_marker() -> void:

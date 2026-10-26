@@ -77,6 +77,18 @@ static func upgrade(upgrade_id: String) -> Dictionary:
 	return {}
 
 
+static func research(research_id: String) -> Dictionary:
+	for entry in _research():
+		if str(entry["id"]) == research_id:
+			return (entry as Dictionary).duplicate(true)
+	return {}
+
+
+## The loom rule may start only these two recipes. pack_textile is not a priority.
+static func is_loom_priority(recipe_id: String) -> bool:
+	return recipe_id == "bundle_fiber" or recipe_id == "twist_cord"
+
+
 static func _orders() -> Array:
 	return [
 		{
@@ -110,6 +122,17 @@ static func _upgrades() -> Array:
 			"detail": "A second shuttle on the loom. The next job finishes one tick sooner.",
 			"cost": 160,
 			"speed_ticks": 1,
+		},
+	]
+
+
+static func _research() -> Array:
+	return [
+		{
+			"id": "loom_rule",
+			"label": "Loom rule",
+			"detail": "When Verdant Fiber is ready and a worker is assigned, the loom starts the chosen good.",
+			"cost": 120,
 		},
 	]
 

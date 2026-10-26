@@ -13,6 +13,8 @@ signal upgrade_pressed
 signal crew_pressed
 signal hire_requested(worker_id: String)
 signal assign_requested(worker_id: String)
+signal research_pressed
+signal priority_requested(recipe_id: String)
 
 var name_label: Label
 var region_label: Label
@@ -35,6 +37,9 @@ var order_body: Label
 var order_deliver: Button
 var order_deliver_cord: Button
 var crew_button: Button
+var research_button: Button
+var priority_bundle: Button
+var priority_cord: Button
 var crew_panel: PanelContainer
 var workshop_open := false
 var orders_open := false
@@ -131,11 +136,24 @@ func _ready() -> void:
 	crew_button = _action(column, "CrewButton", "Crew")
 	crew_button.visible = false
 	crew_button.pressed.connect(func() -> void: crew_pressed.emit())
+	research_button = _action(column, "ResearchButton", "Buy loom rule")
+	research_button.visible = false
+	research_button.pressed.connect(func() -> void: research_pressed.emit())
 
 	workshop_panel = _card(root, "WorkshopPanel", Vector2(430, 150))
 	var workshop_title := _card_title(workshop_panel, "WorkshopTitle", "Textile workshop")
 	workshop_title.text = "Textile workshop"
 	workshop_body = _card_body(workshop_panel, "WorkshopBody")
+	var priority_row := HBoxContainer.new()
+	priority_row.name = "PriorityRow"
+	priority_row.add_theme_constant_override("separation", 8)
+	workshop_panel.get_node("Box").add_child(priority_row)
+	priority_bundle = _action(priority_row, "PriorityBundle", "Bundle priority")
+	priority_bundle.visible = false
+	priority_bundle.pressed.connect(func() -> void: priority_requested.emit("bundle_fiber"))
+	priority_cord = _action(priority_row, "PriorityCord", "Cord priority")
+	priority_cord.visible = false
+	priority_cord.pressed.connect(func() -> void: priority_requested.emit("twist_cord"))
 	var workshop_row := HBoxContainer.new()
 	workshop_row.add_theme_constant_override("separation", 8)
 	workshop_panel.get_node("Box").add_child(workshop_row)
@@ -170,7 +188,7 @@ func _ready() -> void:
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", 15)
-	hint.text = "Left-click open ground to place the fiber plot. Click the workshop shed to bundle. X removes the plot. Esc saves and returns.\nAfter Mara's lesson, choose a Fiber Bundle or a Fiber Cord. One harvest cannot fill both orders. Crew hires a worker. Right-drag or Q/E orbit. Middle-drag or WASD pan. Wheel or +/- zoom."
+	hint.text = "Left-click open ground to place the fiber plot. Click the workshop shed to bundle. X removes the plot. Esc saves and returns.\nAfter Mara's lesson, choose a Fiber Bundle or a Fiber Cord. The loom rule sets that choice as a priority. One harvest cannot fill both orders. Crew hires a worker. Right-drag or Q/E orbit. Middle-drag or WASD pan. Wheel or +/- zoom."
 	root.add_child(hint)
 
 
@@ -209,6 +227,12 @@ func refresh(game: SaveGame, loop: FarmLoop, barn_selected: bool) -> void:
 	_style_button(upgrade_button, step == TutorialTrack.UPGRADE or rack_open)
 	crew_button.visible = step >= TutorialTrack.DONE
 	_style_button(crew_button, step >= TutorialTrack.DONE and loop.roster.workshop_worker_id == "")
+	var rule_owned := loop.research.owns("loom_rule")
+	research_button.visible = step >= TutorialTrack.DONE and not rule_owned
+	if research_button.visible:
+		var rule_cost := int(ResourceCatalog.research("loom_rule")["cost"])
+		research_button.text = "Buy loom rule (%d)" % rule_cost
+	_style_button(research_button, research_button.visible)
 	_fill_crew(loop)
 	barn_label.visible = barn_selected
 	if barn_selected:
@@ -265,7 +289,7 @@ func _set_orders_open(open: bool) -> void:
 func _fill_workshop(loop: FarmLoop) -> void:
 	var bundle_pace := loop.job_ticks("bundle_fiber")
 	var cord_pace := loop.job_ticks("twist_cord")
-	var line := "Choose one good. Both spend 2 Verdant Fiber.\nFiber Bundle: %d ticks. Fiber Cord: %d ticks." % [bundle_pace, cord_pace]
+	var line := "Both goods spend 2 Verdant Fiber.\nFiber Bundle: %d ticks. Fiber Cord: %d ticks." % [bundle_pace, cord_pace]
 	var person := loop.roster.assigned_worker()
 	if person.is_empty():
 		line += "\nNo one is assigned. The bench runs at the lesson pace."
@@ -273,6 +297,16 @@ func _fill_workshop(loop: FarmLoop) -> void:
 		line += "\n%s is assigned." % str(person["name"])
 	if loop.upgrades.owns("shuttle_rack"):
 		line += "\nShuttle rack: the next job is one tick faster."
+	var rule_owned := loop.research.owns("loom_rule")
+	if rule_owned:
+		var chosen := loop.research.priority
+		if ResourceCatalog.is_loom_priority(chosen):
+			line += "\nLoom rule is on. Priority: %s." % _priority_label(chosen)
+		else:
+			line += "\nLoom rule is on. Choose a priority."
+		line += "\nWhen the plot is ready, the assigned worker starts that good."
+	else:
+		line += "\nThe loom rule is locked. Start the job by hand."
 	if loop.workshop.is_busy():
 		line += "\nRunning. %d ticks left." % loop.workshop.ticks_remaining
 	else:
@@ -282,6 +316,10 @@ func _fill_workshop(loop: FarmLoop) -> void:
 	workshop_body.text = line
 	workshop_start.disabled = loop.workshop.is_busy() or not loop.tutorial.allows("workshop")
 	workshop_cord.disabled = loop.workshop.is_busy() or loop.tutorial.step < TutorialTrack.DONE
+	priority_bundle.visible = rule_owned
+	priority_cord.visible = rule_owned
+	_style_button(priority_bundle, loop.research.priority == "bundle_fiber")
+	_style_button(priority_cord, loop.research.priority == "twist_cord")
 
 
 func _fill_order(loop: FarmLoop) -> void:
@@ -323,6 +361,14 @@ func _order_ready(loop: FarmLoop, order_id: String) -> bool:
 		if loop.inventory.lowest_grade_with(str(input["id"]), int(input["amount"])) == 0:
 			return false
 	return true
+
+
+func _priority_label(recipe_id: String) -> String:
+	var recipe := ResourceCatalog.recipe(recipe_id)
+	if recipe.is_empty():
+		return recipe_id
+	var output_id := str(recipe["output_id"])
+	return str(ResourceCatalog.resources()[output_id]["label"])
 
 
 func _good_count(loop: FarmLoop, resource_id: String) -> String:

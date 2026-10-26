@@ -9,6 +9,7 @@ func _initialize() -> void:
 	var cycle := false
 	var crew := false
 	var priority := false
+	var automation := false
 	for arg in OS.get_cmdline_user_args():
 		if str(arg).begins_with("--output="):
 			output = str(arg).trim_prefix("--output=")
@@ -20,6 +21,8 @@ func _initialize() -> void:
 			crew = true
 		elif str(arg) == "--priority":
 			priority = true
+		elif str(arg) == "--automation":
+			automation = true
 	if menu:
 		var menu_scene: PackedScene = load("res://scenes/menu/main_menu.tscn")
 		if menu_scene == null:
@@ -45,6 +48,8 @@ func _initialize() -> void:
 	root.add_child(farm)
 	if crew:
 		call_deferred("_capture_crew", farm, output)
+	elif automation:
+		call_deferred("_capture_automation", farm, output)
 	elif priority:
 		call_deferred("_capture_priority", farm, output)
 	elif cycle:
@@ -193,6 +198,100 @@ func _capture_priority(farm: Node, output: String) -> void:
 	if anim != null and anim.has_animation("walk"):
 		anim.play("walk")
 		anim.seek(0.25, true)
+		anim.pause()
+	await _capture_view(output)
+
+
+func _capture_automation(farm: Node, output: String) -> void:
+	for _frame in 4:
+		await process_frame
+	var session := farm as FarmSession
+	session.set_process(false)
+	var starter := session.loop.inventory.amount("verdant_fiber", GradeScale.COMMON)
+	if starter > 0 and not session.loop.inventory.remove("verdant_fiber", GradeScale.COMMON, starter):
+		push_error("starter fiber")
+		quit(4)
+		return
+	var err := session.play_intro_cycle(4.0, 6.0)
+	if err != "":
+		push_error(err)
+		quit(4)
+		return
+	var leftover := session.loop.inventory.amount("verdant_fiber", GradeScale.COMMON)
+	if leftover > 0 and not session.loop.inventory.remove("verdant_fiber", GradeScale.COMMON, leftover):
+		push_error("leftover fiber")
+		quit(4)
+		return
+	if session.hire_worker("alex_morgan") != "" or session.assign_worker("alex_morgan") != "":
+		push_error("crew")
+		quit(4)
+		return
+	if session.buy_loom_rule() != "":
+		push_error("loom rule")
+		quit(4)
+		return
+	if session.loop.plot.plant() != "":
+		push_error("replant")
+		quit(4)
+		return
+	session.loop.advance(6.0)
+	if not session.loop.plot.is_ready() or session.loop.workshop.is_busy():
+		push_error("plot")
+		quit(4)
+		return
+	if session.set_loom_priority("bundle_fiber") != "":
+		push_error("priority")
+		quit(4)
+		return
+	if session.loop.workshop.active_recipe_id != "bundle_fiber":
+		push_error("recipe %s" % session.loop.workshop.active_recipe_id)
+		quit(4)
+		return
+	session.hud.open_orders(false)
+	session.hud.open_crew(false)
+	session.hud.open_workshop(true)
+	session.hud.workshop_panel.position = Vector2(16, 188)
+	var hint := session.hud.get_node_or_null("HudRoot/Hint") as CanvasItem
+	if hint != null:
+		hint.visible = false
+	var ledger := session.hud.get_node_or_null("HudRoot/LedgerLabel") as CanvasItem
+	if ledger != null:
+		ledger.visible = false
+	session.refresh_presentation()
+	if ledger != null:
+		ledger.visible = false
+	var body := session.hud.workshop_body
+	if body == null or not body.text.contains("Loom rule is on. Priority: Fiber Bundle."):
+		push_error("priority copy")
+		quit(4)
+		return
+	if not session.hud.priority_bundle.visible or not session.hud.priority_cord.visible:
+		push_error("priority buttons")
+		quit(4)
+		return
+	session.set_process(false)
+	var view := session.get_node("Stage/FarmCamera") as Camera3D
+	view.focus = Vector3(4.2, 1.2, 2.6)
+	view.yaw = 0.55
+	view.pitch = 0.48
+	view.distance = 14.5
+	view.orbit(0.0, 0.0)
+	var walker = session.get_node("Stage/Farmhand")
+	walker.set_process(false)
+	walker.global_position = Vector3(-2.4, 0.0, -5.2)
+	var walk_anim: AnimationPlayer = walker.animation_player()
+	if walk_anim != null and walk_anim.has_animation("walk"):
+		walk_anim.play("walk")
+		walk_anim.seek(0.25, true)
+		walk_anim.pause()
+	session.workshop_rig.set_process(false)
+	session.workshop_rig.advance(0.85, true)
+	var stationed := session.workshop_worker
+	stationed.set_process(false)
+	var anim: AnimationPlayer = stationed.animation_player()
+	if anim != null and anim.has_animation("work"):
+		anim.play("work")
+		anim.seek(0.08, true)
 		anim.pause()
 	await _capture_view(output)
 

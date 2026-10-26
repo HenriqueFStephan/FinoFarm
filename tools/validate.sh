@@ -41,6 +41,9 @@ godot --headless --path . -s res://tests/run_staff_tests.gd
 echo "priority"
 godot --headless --path . -s res://tests/run_priority_tests.gd
 
+echo "automation"
+godot --headless --path . -s res://tests/run_automation_tests.gd
+
 echo "scene"
 godot --headless --path . -s res://tests/run_scene_checks.gd
 
