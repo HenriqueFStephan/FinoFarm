@@ -2,7 +2,7 @@
 
 Stylized 3D farming and business simulation, built in Godot 4.7 with GDScript.
 
-The game opens on a 3D main menu. New Game asks for a farm name and one of four fictional regions, then loads that farm. The farm has a modeled barn, a rigged character with a walk cycle, a camera that pans, zooms, and orbits, and one grid marker. Production rules in code are fictional timers, grades, and recipes. They are not a cultivation guide.
+The game opens on a 3D main menu. New Game asks for a farm name and one of four fictional regions, then loads that farm. The farm has a modeled barn, a rigged character with a walk cycle, a camera that pans, zooms, and orbits, and one grid plot. Placing the plot starts Verdant Fiber on a timer. The player harvests it, bundles it in the workshop, delivers one order, and buys a barn loft. Recipes are fictional timers and grades. They are not a cultivation guide.
 
 ## Run
 
@@ -18,7 +18,7 @@ Controls in the farm scene:
 - Right-drag, or Q / E, orbits the camera. R / F changes pitch.
 - Middle-drag, or WASD / arrow keys, pans.
 - Mouse wheel, or + / -, zooms.
-- Left-click places or moves one plot marker. X removes it. Esc saves and returns to the menu.
+- Left-click places or moves one fiber plot. Click the workshop shed to bundle. The order board and the loft button follow the on-screen steps. X removes the plot. Esc saves and returns to the menu.
 
 ## Validate
 
@@ -26,7 +26,7 @@ Controls in the farm scene:
 bash tools/validate.sh
 ```
 
-That imports the project headless, parses every gameplay script with `--check-only`, and runs the simulation, region, save, placement, and scene checks. The same command is the GitHub Actions job in `.github/workflows/validate.yml`.
+That imports the project headless, parses every gameplay script with `--check-only`, and runs the simulation, region, save, placement, economy, and scene checks. The same command is the GitHub Actions job in `.github/workflows/validate.yml`.
 
 Capture one frame when visuals change (needs a display; software GL is fine):
 
@@ -52,4 +52,4 @@ godot --path . --display-driver x11 --rendering-driver opengl3 \
 
 `.cursor/install.sh` is the cloud-agent install. It pins Godot 4.7.2 standard (GDScript, not .NET), Blender 5.2.3, and Git LFS. Do not remove it. Large binary art (`glb`, `png`, `blend`, audio) is marked for Git LFS in `.gitattributes`. No LFS objects are committed yet.
 
-The barn and the farmhand are in-engine models, not approved final art. Terrain, trees, and the plot marker are still placeholders. See the art bible before calling any of them finished art.
+The barn and the farmhand are in-engine models, not approved final art. Terrain, trees, the plot marker, the fiber plot, the workshop, and the barn loft are still placeholders. See the art bible before calling any of them finished art.

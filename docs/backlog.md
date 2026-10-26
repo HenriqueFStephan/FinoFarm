@@ -41,7 +41,21 @@ Status values: `queued`, `claimed`, `in_progress`, `in_review`, `blocked`, `done
 | FF-19 | [#13](https://github.com/HenriqueFStephan/FinoFarm/issues/13) | Rigged walking character | `bc-8c016ab1-953f-5404-9ef6-5a48e500e77b` | in_review | FF-3 art bible | Registry row is not `placeholder`. An imported walk clip plays while the character moves. The procedural sine swing is gone. |
 | FF-20 | [#14](https://github.com/HenriqueFStephan/FinoFarm/issues/14) | Basic farm HUD | `bc-8c016ab1-953f-5404-9ef6-5a48e500e77b` | in_review | FF-12 | HUD shows farm name, region, and funds from the save, not a hard-coded number that ignores the file. |
 
-GitHub issues #2 through #14 were opened for these rows. This file remains the ownership record. Claim a row here and comment on the issue before coding.
+## Milestone 2
+
+No new GitHub issues. These rows are the claim. `gh issue comment` is not required for them.
+
+| Id | Issue | Title | Owner | Status | Depends on | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| FF-21 | — | Verdant Fiber growth on the placed plot | `bc-a268dd57-bf1b-5371-92d3-52cfc3253aa2` | in_review | FF-17 | `tests/run_economy_tests.gd` checks the tick the plot becomes ready, and that an early harvest does not change inventory. The farm scene shows row, sprout, leaf, and ready meshes. |
+| FF-22 | — | Inventory on the farm HUD | `bc-a268dd57-bf1b-5371-92d3-52cfc3253aa2` | in_review | FF-12, FF-20 | The HUD line is built from `FarmInventory`, including grade. |
+| FF-23 | — | Textile workshop with a loom animation | `bc-a268dd57-bf1b-5371-92d3-52cfc3253aa2` | in_review | FF-3, FF-21 | The scene starts `bundle_fiber` through `SimStepper`. The loom arm moves while the job is busy and stays still when it is idle. |
+| FF-24 | — | Order board and currency | `bc-a268dd57-bf1b-5371-92d3-52cfc3253aa2` | in_review | FF-23 | Delivering `intro_bundle` adds 180 funds once. Missing goods do not pay or consume. |
+| FF-25 | — | Barn loft purchase | `bc-a268dd57-bf1b-5371-92d3-52cfc3253aa2` | in_review | FF-24 | Cost is 400. Tropical Valley (richest start) cannot buy before the sale. The loft mesh is hidden until the purchase. It is a placeholder. |
+| FF-26 | — | Guided tutorial for one full cycle | `bc-a268dd57-bf1b-5371-92d3-52cfc3253aa2` | in_review | FF-21, FF-23, FF-24, FF-25 | `FarmLoop` reaches tutorial step done only after place, grow, harvest, bundle, deliver, and buy. |
+| FF-27 | — | Save the loop on schema 1 | `bc-a268dd57-bf1b-5371-92d3-52cfc3253aa2` | in_review | FF-12 | A file without `plot`, `orders`, and `upgrades` still loads. A plot stage outside 0..3 is rejected. Schema `2` is still rejected. |
+
+GitHub issues #2 through #14 were opened for Milestone 0 and 1. This file remains the ownership record. Claim a row here before coding. Milestone 2 is claimed in the table above and does not have duplicate issues.
 
 ## Dependency sketch
 
@@ -53,10 +67,13 @@ FF-3
   │    └─ FF-20
   ├─ FF-13 ─ FF-14
   │    └─ FF-15
-  ├─ FF-17
+  ├─ FF-17 ─ FF-21 ─ FF-23 ─ FF-24 ─ FF-25
+  │              └─ FF-26
   ├─ FF-18
   └─ FF-19
 ```
+
+FF-22 hangs off FF-12 and FF-20. FF-27 hangs off FF-12. FF-26 needs the four player steps, not a new scene of its own.
 
 FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` unless they instance child scenes. Child scenes are the default.
 
@@ -67,5 +84,5 @@ FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` 
 | FF-3 | Cloud or local. Needs Godot. A display is only for the capture. |
 | FF-7 | Cloud, with network access to official Godot templates. |
 | FF-8, FF-13, FF-18, FF-19 | Prefer a display. Headless import is necessary and not sufficient. |
-| FF-11, FF-12, FF-17 math | Cloud. Tests must not require rendering. |
+| FF-11, FF-12, FF-17 math, FF-21 through FF-27 rules | Cloud. Economy tests must not require rendering. The cycle screenshot needs a display. |
 | FF-9 | Human admin on GitHub. |

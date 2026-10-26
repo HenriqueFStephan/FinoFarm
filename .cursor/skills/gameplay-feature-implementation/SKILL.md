@@ -23,7 +23,7 @@ The workshop already returns `missing_inputs` without consuming stacks. A future
 
 ## Constraints
 
-- Milestone 1 does not include the order loop. Do not build the order board while doing the menu unless the task id says so.
+- Milestone 1 does not include the order loop. Milestone 2 is that loop: `FarmLoop`, the fiber plot, the bundle workshop, `intro_bundle`, and the barn loft. Do not add a second order board beside it.
 - One owner per task. Placement (FF-17) and the barn model (FF-18) do not edit the same scene nodes.
 - Keep `bash tools/validate.sh` green. Wire a new test runner into that script or it will not run in CI.
 

@@ -5,8 +5,8 @@ The charter's milestone list, with current status. Dates are not estimates. Stat
 | Milestone | Acceptance, short | Status |
 | --- | --- | --- |
 | 0 Foundation | The real engine project launches, architecture is documented, agents can take tasks without colliding. | In review on this branch. Scene, docs, skills, backlog, and `tools/validate.sh` are in the tree. Follow-ups: FF-7, FF-8, FF-9. |
-| 1 First playable farm | Create a farm and explore a visually coherent 3D place. | Not started. Design: [vertical slice](vertical-slice-m1.md). Tasks FF-11 through FF-20. The Milestone 0 scene is not this milestone. |
-| 2 Economic loop | Produce, sell, and upgrade once, with a tutorial. | Blocked on Milestone 1. Simulation types for two fictional recipes already exist and are tested. |
+| 1 First playable farm | Create a farm and explore a visually coherent 3D place. | In review on `cursor/milestone-1-playable-farm-e77b`. This branch stacks on it. Tasks FF-11 through FF-20. |
+| 2 Economic loop | Produce, sell, and upgrade once, with a tutorial. | In review on this branch. Tasks FF-21 through FF-27. One Verdant Fiber plot, the bundle workshop, one order, and the barn loft. `pack_textile` is still catalog-only. |
 | 3 Employees | Assignments change outcomes, and workers are visible. | Not started. The block-out walker is not this system. |
 | 4 Production expansion | Real choices about chains and buildings. | Not started. |
 | 5 Automation | The player's job shifts from doing tasks to directing them. | Not started. |

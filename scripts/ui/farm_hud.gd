@@ -2,12 +2,34 @@ class_name FarmHud
 extends CanvasLayer
 
 signal remove_pressed
+signal harvest_pressed
+signal workshop_pressed
+signal workshop_start_pressed
+signal orders_pressed
+signal order_deliver_pressed
+signal upgrade_pressed
 
 var name_label: Label
 var region_label: Label
 var funds_label: Label
-var remove_button: Button
+var inventory_label: Label
+var tutorial_label: Label
+var ledger_label: Label
 var barn_label: Label
+var remove_button: Button
+var harvest_button: Button
+var workshop_button: Button
+var orders_button: Button
+var upgrade_button: Button
+var workshop_panel: PanelContainer
+var workshop_body: Label
+var workshop_start: Button
+var order_panel: PanelContainer
+var order_body: Label
+var order_deliver: Button
+
+var workshop_open := false
+var orders_open := false
 
 
 func _ready() -> void:
@@ -33,44 +55,101 @@ func _ready() -> void:
 	region_label = _fact(row, "RegionLabel")
 	funds_label = _fact(row, "FundsLabel")
 
-	barn_label = Label.new()
-	barn_label.name = "BarnLabel"
-	barn_label.position = Vector2(24, 78)
+	inventory_label = _shadow_label("InventoryLabel")
+	inventory_label.position = Vector2(24, 78)
+	inventory_label.add_theme_font_size_override("font_size", 16)
+	root.add_child(inventory_label)
+
+	var tutorial := PanelContainer.new()
+	tutorial.name = "TutorialPanel"
+	tutorial.position = Vector2(24, 112)
+	tutorial.custom_minimum_size = Vector2(460, 0)
+	tutorial.mouse_filter = Control.MOUSE_FILTER_STOP
+	tutorial.add_theme_stylebox_override("panel", _panel_style())
+	root.add_child(tutorial)
+
+	tutorial_label = Label.new()
+	tutorial_label.name = "TutorialText"
+	tutorial_label.custom_minimum_size = Vector2(428, 0)
+	tutorial_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tutorial_label.add_theme_font_size_override("font_size", 18)
+	tutorial_label.add_theme_color_override("font_color", Color(0.23, 0.16, 0.1))
+	tutorial.add_child(tutorial_label)
+
+	ledger_label = _shadow_label("LedgerLabel")
+	ledger_label.position = Vector2(24, 230)
+	ledger_label.custom_minimum_size = Vector2(480, 0)
+	ledger_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ledger_label.add_theme_font_size_override("font_size", 16)
+	root.add_child(ledger_label)
+
+	barn_label = _shadow_label("BarnLabel")
+	barn_label.position = Vector2(24, 268)
 	barn_label.visible = false
-	barn_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	barn_label.add_theme_font_size_override("font_size", 18)
-	barn_label.add_theme_color_override("font_color", Color(0.98, 0.961, 0.902))
-	barn_label.add_theme_color_override("font_shadow_color", Color(0.12, 0.14, 0.1, 0.85))
-	barn_label.add_theme_constant_override("shadow_offset_x", 1)
-	barn_label.add_theme_constant_override("shadow_offset_y", 1)
-	barn_label.text = "Barn selected. Stylized storage building. Production is not in this milestone."
+	barn_label.add_theme_font_size_override("font_size", 16)
 	root.add_child(barn_label)
 
 	remove_button = Button.new()
 	remove_button.name = "RemoveButton"
-	remove_button.text = "Remove marker"
-	remove_button.position = Vector2(24, 112)
+	remove_button.text = "Remove plot"
+	remove_button.position = Vector2(24, 300)
 	remove_button.visible = false
 	remove_button.pressed.connect(func() -> void: remove_pressed.emit())
-	_style_button(remove_button)
+	_style_button(remove_button, false)
 	root.add_child(remove_button)
 
-	var hint := Label.new()
-	hint.name = "Hint"
+	var column := VBoxContainer.new()
+	column.name = "ActionColumn"
+	column.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	column.offset_left = -196
+	column.offset_top = 18
+	column.offset_right = -24
+	column.add_theme_constant_override("separation", 8)
+	column.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(column)
+
+	harvest_button = _action(column, "HarvestButton", "Harvest fiber")
+	harvest_button.pressed.connect(func() -> void: harvest_pressed.emit())
+	workshop_button = _action(column, "WorkshopButton", "Workshop")
+	workshop_button.pressed.connect(func() -> void: workshop_pressed.emit())
+	orders_button = _action(column, "OrdersButton", "Order board")
+	orders_button.pressed.connect(func() -> void: orders_pressed.emit())
+	upgrade_button = _action(column, "UpgradeButton", "Buy barn loft")
+	upgrade_button.pressed.connect(func() -> void: upgrade_pressed.emit())
+
+	workshop_panel = _card(root, "WorkshopPanel", Vector2(430, 150))
+	var workshop_title := _card_title(workshop_panel, "WorkshopTitle", "Textile workshop")
+	workshop_title.text = "Textile workshop"
+	workshop_body = _card_body(workshop_panel, "WorkshopBody")
+	var workshop_row := HBoxContainer.new()
+	workshop_row.add_theme_constant_override("separation", 8)
+	workshop_panel.get_node("Box").add_child(workshop_row)
+	workshop_start = _action(workshop_row, "WorkshopStart", "Start bundle")
+	workshop_start.pressed.connect(func() -> void: workshop_start_pressed.emit())
+	var workshop_close := _action(workshop_row, "WorkshopClose", "Close")
+	workshop_close.pressed.connect(func() -> void: _set_workshop_open(false))
+
+	order_panel = _card(root, "OrderPanel", Vector2(430, 300))
+	_card_title(order_panel, "OrderTitle", "Order board")
+	order_body = _card_body(order_panel, "OrderBody")
+	var order_row := HBoxContainer.new()
+	order_row.add_theme_constant_override("separation", 8)
+	order_panel.get_node("Box").add_child(order_row)
+	order_deliver = _action(order_row, "OrderDeliver", "Deliver")
+	order_deliver.pressed.connect(func() -> void: order_deliver_pressed.emit())
+	var order_close := _action(order_row, "OrderClose", "Close")
+	order_close.pressed.connect(func() -> void: _set_orders_open(false))
+
+	var hint := _shadow_label("Hint")
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	hint.offset_top = -64
+	hint.offset_top = -52
 	hint.offset_bottom = -12
 	hint.offset_left = 16
 	hint.offset_right = -16
-	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.add_theme_font_size_override("font_size", 16)
-	hint.add_theme_color_override("font_color", Color(0.98, 0.961, 0.902))
-	hint.add_theme_color_override("font_shadow_color", Color(0.12, 0.14, 0.1, 0.85))
-	hint.add_theme_constant_override("shadow_offset_x", 1)
-	hint.add_theme_constant_override("shadow_offset_y", 1)
-	hint.text = "Left-click the ground to place or move one plot marker. X removes it. Click the barn to select it. Esc saves and returns to the menu.\nRight-drag or Q/E orbit    Middle-drag or WASD pan    Wheel or +/- zoom"
+	hint.add_theme_font_size_override("font_size", 15)
+	hint.text = "Left-click open ground to place the fiber plot. Click the workshop shed to bundle. X removes the plot. Esc saves and returns.\nRight-drag or Q/E orbit    Middle-drag or WASD pan    Wheel or +/- zoom"
 	root.add_child(hint)
 
 
@@ -81,12 +160,88 @@ func bind(game: SaveGame) -> void:
 	funds_label.text = "Funds %d" % game.funds
 
 
+func refresh(game: SaveGame, loop: FarmLoop, barn_selected: bool) -> void:
+	bind(game)
+	inventory_label.text = loop.inventory_line()
+	tutorial_label.text = loop.tutorial.prompt()
+	ledger_label.text = loop.last_event
+	var step := loop.tutorial.step
+	var ready := loop.plot.is_ready()
+	harvest_button.visible = ready and loop.tutorial.allows("harvest")
+	workshop_button.visible = step >= TutorialTrack.WORKSHOP
+	orders_button.visible = step >= TutorialTrack.ORDER
+	upgrade_button.visible = step >= TutorialTrack.UPGRADE and not loop.upgrades.owns("barn_loft")
+	_style_button(harvest_button, step == TutorialTrack.HARVEST)
+	_style_button(workshop_button, step == TutorialTrack.WORKSHOP or step == TutorialTrack.BUNDLE)
+	_style_button(orders_button, step == TutorialTrack.ORDER)
+	_style_button(upgrade_button, step == TutorialTrack.UPGRADE)
+	barn_label.visible = barn_selected
+	if barn_selected:
+		if loop.upgrades.owns("barn_loft"):
+			barn_label.text = "Barn selected. The loft is built."
+		else:
+			var cost := int(ResourceCatalog.upgrade("barn_loft")["cost"])
+			barn_label.text = "Barn selected. The loft costs %d." % cost
+	_fill_workshop(loop)
+	_fill_order(loop)
+	workshop_panel.visible = workshop_open
+	order_panel.visible = orders_open
+
+
 func set_marker_available(has_marker: bool) -> void:
 	remove_button.visible = has_marker
 
 
 func set_barn_selected(selected: bool) -> void:
 	barn_label.visible = selected
+
+
+func open_workshop(open: bool) -> void:
+	_set_workshop_open(open)
+
+
+func open_orders(open: bool) -> void:
+	_set_orders_open(open)
+
+
+func _set_workshop_open(open: bool) -> void:
+	workshop_open = open
+	workshop_panel.visible = open
+	if open:
+		orders_open = false
+		order_panel.visible = false
+
+
+func _set_orders_open(open: bool) -> void:
+	orders_open = open
+	order_panel.visible = open
+	if open:
+		workshop_open = false
+		workshop_panel.visible = false
+
+
+func _fill_workshop(loop: FarmLoop) -> void:
+	var recipe := ResourceCatalog.recipe("bundle_fiber")
+	var line := "Bundle 2 Verdant Fiber into 1 Fiber Bundle. %d ticks." % int(recipe["duration_ticks"])
+	if loop.workshop.is_busy():
+		line += "\nRunning. %d ticks left." % loop.workshop.ticks_remaining
+	else:
+		line += "\nIdle."
+	workshop_body.text = line
+	workshop_start.disabled = loop.workshop.is_busy() or not loop.tutorial.allows("workshop")
+
+
+func _fill_order(loop: FarmLoop) -> void:
+	var spec := ResourceCatalog.order("intro_bundle")
+	var state := str(loop.orders.status.get("intro_bundle", "open"))
+	var body := "%s\n%s\nReward %d." % [str(spec["label"]), str(spec["detail"]), int(spec["reward_funds"])]
+	if state == "done":
+		body += "\nDelivered."
+		order_deliver.disabled = true
+	else:
+		body += "\nOpen. Needs 1 Fiber Bundle."
+		order_deliver.disabled = not loop.tutorial.allows("order")
+	order_body.text = body
 
 
 func _fact(row: HBoxContainer, node_name: String) -> Label:
@@ -98,9 +253,71 @@ func _fact(row: HBoxContainer, node_name: String) -> Label:
 	return label
 
 
+func _shadow_label(node_name: String) -> Label:
+	var label := Label.new()
+	label.name = node_name
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_color_override("font_color", Color(0.98, 0.961, 0.902))
+	label.add_theme_color_override("font_shadow_color", Color(0.12, 0.14, 0.1, 0.85))
+	label.add_theme_constant_override("shadow_offset_x", 1)
+	label.add_theme_constant_override("shadow_offset_y", 1)
+	return label
+
+
+func _action(parent: Node, node_name: String, text: String) -> Button:
+	var button := Button.new()
+	button.name = node_name
+	button.text = text
+	_style_button(button, false)
+	parent.add_child(button)
+	return button
+
+
+func _card(root: Control, node_name: String, origin: Vector2) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.name = node_name
+	panel.position = origin
+	panel.custom_minimum_size = Vector2(380, 0)
+	panel.visible = false
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.add_theme_stylebox_override("panel", _panel_style())
+	root.add_child(panel)
+	var box := VBoxContainer.new()
+	box.name = "Box"
+	box.add_theme_constant_override("separation", 8)
+	panel.add_child(box)
+	return panel
+
+
+func _card_title(panel: PanelContainer, node_name: String, text: String) -> Label:
+	var label := Label.new()
+	label.name = node_name
+	label.text = text
+	label.add_theme_font_size_override("font_size", 20)
+	label.add_theme_color_override("font_color", Color(0.23, 0.16, 0.1))
+	panel.get_node("Box").add_child(label)
+	return label
+
+
+func _card_body(panel: PanelContainer, node_name: String) -> Label:
+	var label := Label.new()
+	label.name = node_name
+	label.custom_minimum_size = Vector2(348, 0)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_color_override("font_color", Color(0.23, 0.16, 0.1))
+	panel.get_node("Box").add_child(label)
+	return label
+
+
 func _panel_style() -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color = Color(0.953, 0.902, 0.784, 0.94)
+	box.border_color = Color(0.776, 0.478, 0.18, 1)
+	box.border_width_left = 2
+	box.border_width_top = 2
+	box.border_width_right = 2
+	box.border_width_bottom = 2
 	box.corner_radius_top_left = 12
 	box.corner_radius_top_right = 12
 	box.corner_radius_bottom_left = 12
@@ -112,9 +329,12 @@ func _panel_style() -> StyleBoxFlat:
 	return box
 
 
-func _style_button(button: Button) -> void:
+func _style_button(button: Button, emphasized: bool) -> void:
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0.84, 0.62, 0.28, 1)
+	if emphasized:
+		normal.bg_color = Color(0.92, 0.72, 0.28, 1)
+	else:
+		normal.bg_color = Color(0.84, 0.62, 0.28, 1)
 	normal.corner_radius_top_left = 8
 	normal.corner_radius_top_right = 8
 	normal.corner_radius_bottom_left = 8
@@ -126,5 +346,7 @@ func _style_button(button: Button) -> void:
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", normal)
 	button.add_theme_stylebox_override("pressed", normal)
+	button.add_theme_stylebox_override("disabled", normal)
 	button.add_theme_color_override("font_color", Color(0.23, 0.14, 0.08))
+	button.add_theme_color_override("font_disabled_color", Color(0.35, 0.28, 0.2))
 	button.add_theme_font_size_override("font_size", 16)

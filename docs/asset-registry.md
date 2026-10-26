@@ -2,7 +2,7 @@
 
 Stub. Add a row before a new source file is used in a scene. Status `placeholder` means it is not final art, even if it is on screen.
 
-No third-party model, texture, audio, or font is imported. The barn and the farmhand were generated in Blender for this project. Terrain, trees, the plot marker, and the selection ring are still engine primitives or a shader.
+No third-party model, texture, audio, or font is imported. The barn and the farmhand were generated in Blender for this project. Terrain, trees, the plot marker, the selection ring, the fiber plot, the workshop, and the barn loft are still engine primitives or a shader.
 
 | Id | Scene node | Source | Export | Author | License | Materials | Polys | Animation | Scenes | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -11,6 +11,9 @@ No third-party model, texture, audio, or font is imported. The barn and the farm
 | `tree.placeholder` | `PlaceholderTreeA/B/C` | cylinder and sphere in the scene | n/a | in-engine primitives | project original | flat colors | primitive | none | `farm_stage.tscn` | placeholder |
 | `character.farmhand.v1` | `Farmhand` | `tools/blender/farmhand.py` | `assets/models/farmhand.glb` | Blender script in this repo | project original, commercial use allowed | flat principled colors, no textures | 10340 tris | skeleton `Armature`, clips `idle` and `walk`, in-place | `scenes/characters/farmhand.tscn` | in-engine |
 | `marker.placeholder` | `PlaceholderPlotMarker` | cylinder and box in `scenes/props/plot_marker.tscn` | n/a | in-engine primitives | project original | flat colors | primitive | none | `first_farm.tscn` | placeholder |
+| `crop.placeholder` | `PlaceholderCrop` | primitives in `scenes/props/placeholder_crop.tscn` | n/a | in-engine primitives | project original | flat colors | primitive | stage swap, no clip | `first_farm.tscn` | placeholder |
+| `workshop.placeholder` | `PlaceholderWorkshop` | boxes and a cylinder in `scenes/buildings/placeholder_workshop.tscn` | n/a | in-engine primitives | project original | flat colors | primitive | scripted loom spin while busy | `first_farm.tscn` | placeholder |
+| `loft.placeholder` | `PlaceholderBarnLoft` | boxes in `scenes/buildings/placeholder_loft.tscn` | n/a | in-engine primitives | project original | flat colors | primitive | none | `first_farm.tscn` | placeholder |
 | `icon.game` | project icon | `icon.svg` | svg | in-repo vector | project original | flat fills | n/a | none | project settings | block-out icon, not marketing art |
 
 External source URL for both glTF files: none. The box barn and the sine-wave walker are no longer instanced. `in-engine` means Godot imports the glTF and a scene instances it. It does not mean art-director acceptance.

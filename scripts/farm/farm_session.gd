@@ -1,7 +1,7 @@
 class_name FarmSession
 extends Node3D
 
-## Playable farm. Reads the active save, shows it, and writes it back.
+## Playable farm. Reads the active save, runs the textile loop, and writes it back.
 
 const MENU_SCENE := "res://scenes/menu/main_menu.tscn"
 
@@ -9,14 +9,19 @@ var library: FarmLibrary
 var game: SaveGame
 var persist := true
 var grid := PlotGrid.new()
+var loop := FarmLoop.new()
 
 var _save_wait := 0.0
+var _barn_selected := false
 
 @onready var camera: Camera3D = $Stage/FarmCamera
 @onready var farmhand: Node3D = $Stage/Farmhand
 @onready var marker: Node3D = $PlaceholderPlotMarker
 @onready var hover: Node3D = $PlaceholderPlotHover
 @onready var selection_ring: Node3D = $PlaceholderSelectionRing
+@onready var crop: CropVisual = $PlaceholderCrop
+@onready var workshop_rig: WorkshopRig = $PlaceholderWorkshop
+@onready var loft: Node3D = $PlaceholderBarnLoft
 @onready var hud: FarmHud = $Hud
 
 
@@ -34,15 +39,18 @@ func _ready() -> void:
 		if game == null:
 			game = SaveGame.create_new("Sunny Rows", "tropical_valley")["game"]
 			persist = false
+	if loop.read_from(game) != "":
+		push_error("farm loop could not read the save")
+	_connect_hud()
 	_apply_game()
-	if not hud.remove_pressed.is_connected(_on_remove_marker):
-		hud.remove_pressed.connect(_on_remove_marker)
 
 
 func _process(delta: float) -> void:
 	if game == null:
 		return
 	game.playtime_seconds += delta
+	loop.advance(delta)
+	refresh_presentation()
 	if not persist:
 		return
 	_save_wait += delta
@@ -71,21 +79,106 @@ func place_marker_at(world_x: float, world_z: float) -> String:
 	var cell := PlotGrid.snap_cell(world_x, world_z)
 	if PlotGrid.blocked(cell):
 		_set_barn_selected(true)
+		_set_workshop_selected(false)
 		return "blocked"
+	if _on_workshop_cell(cell):
+		_set_barn_selected(false)
+		_set_workshop_selected(true)
+		hud.open_workshop(true)
+		return "workshop"
 	_set_barn_selected(false)
+	_set_workshop_selected(false)
 	var err := grid.move_to(world_x, world_z) if grid.has_marker else grid.place_at(world_x, world_z)
 	if err == "":
+		loop.plant_if_needed()
 		_sync_marker()
+		refresh_presentation()
 		_write()
 	return err
 
 
 func remove_marker() -> String:
 	var err := grid.remove()
-	_sync_marker()
+	if err == "":
+		loop.uproot()
+		_sync_marker()
+		refresh_presentation()
+		_write()
+	return err
+
+
+func harvest_plot() -> String:
+	var err := loop.harvest()
+	refresh_presentation()
 	if err == "":
 		_write()
 	return err
+
+
+func start_workshop() -> String:
+	var err := loop.start_bundle()
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func fulfill_order() -> String:
+	var err := loop.fulfill_intro(game)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func buy_loft() -> String:
+	var err := loop.buy_loft(game)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func play_intro_cycle(plot_x: float, plot_z: float) -> String:
+	var err := place_marker_at(plot_x, plot_z)
+	if err != "":
+		return err
+	loop.advance(5.0)
+	if loop.plot.is_ready():
+		return "ready early"
+	loop.advance(1.0)
+	if not loop.plot.is_ready():
+		return "not ready"
+	err = harvest_plot()
+	if err != "":
+		return err
+	err = start_workshop()
+	if err != "":
+		return err
+	loop.advance(3.0)
+	if loop.inventory.amount("fiber_bundle", GradeScale.COMMON) != 0:
+		return "bundle early"
+	loop.advance(1.0)
+	err = fulfill_order()
+	if err != "":
+		return err
+	err = buy_loft()
+	if err != "":
+		return err
+	refresh_presentation()
+	if loop.tutorial.step != TutorialTrack.DONE:
+		return "tutorial"
+	return ""
+
+
+func refresh_presentation() -> void:
+	_sync_crop()
+	_sync_loft()
+	if workshop_rig != null:
+		workshop_rig.operating = loop.workshop.is_busy()
+	if hud != null and game != null:
+		hud.refresh(game, loop, _barn_selected)
+		hud.set_marker_available(grid.has_marker)
 
 
 func _apply_game() -> void:
@@ -99,7 +192,8 @@ func _apply_game() -> void:
 	camera.orbit(0.0, 0.0)
 	_sync_marker()
 	_set_barn_selected(false)
-	hud.bind(game)
+	_set_workshop_selected(false)
+	refresh_presentation()
 
 
 func _capture_state() -> void:
@@ -110,6 +204,7 @@ func _capture_state() -> void:
 		"distance": camera.distance,
 	}
 	game.marker = grid.to_save()
+	loop.write_to(game)
 
 
 func _write() -> void:
@@ -129,6 +224,17 @@ func _click(screen_position: Vector2) -> void:
 	if point == null:
 		return
 	var world := point as Vector3
+	if world.distance_to(WorkshopRig.WORLD_POSITION) <= WorkshopRig.SELECT_RADIUS:
+		_set_barn_selected(false)
+		_set_workshop_selected(true)
+		hud.open_workshop(true)
+		refresh_presentation()
+		return
+	if grid.has_marker and loop.plot.is_ready():
+		var cell := PlotGrid.snap_cell(world.x, world.z)
+		if cell == grid.cell and loop.tutorial.allows("harvest"):
+			harvest_plot()
+			return
 	place_marker_at(world.x, world.z)
 
 
@@ -138,8 +244,11 @@ func _hover(screen_position: Vector2) -> void:
 		hover.visible = false
 		return
 	var world := point as Vector3
+	if world.distance_to(WorkshopRig.WORLD_POSITION) <= WorkshopRig.SELECT_RADIUS:
+		hover.visible = false
+		return
 	var cell := PlotGrid.snap_cell(world.x, world.z)
-	if PlotGrid.blocked(cell) or (grid.has_marker and grid.cell == cell):
+	if PlotGrid.blocked(cell) or _on_workshop_cell(cell) or (grid.has_marker and grid.cell == cell):
 		hover.visible = false
 		return
 	hover.visible = true
@@ -156,17 +265,64 @@ func _sync_marker() -> void:
 	marker.visible = grid.has_marker
 	if grid.has_marker:
 		marker.global_position = PlotGrid.cell_center(grid.cell)
-	if hud != null:
-		hud.set_marker_available(grid.has_marker)
 	if game != null:
 		game.marker = grid.to_save()
 
 
+func _sync_crop() -> void:
+	if crop == null:
+		return
+	crop.show_stage(loop.plot.stage_name())
+	if grid.has_marker:
+		crop.global_position = PlotGrid.cell_center(grid.cell)
+
+
+func _sync_loft() -> void:
+	if loft != null:
+		loft.visible = loop.upgrades.owns("barn_loft")
+
+
 func _set_barn_selected(selected: bool) -> void:
+	_barn_selected = selected
 	selection_ring.visible = selected
-	if hud != null:
-		hud.set_barn_selected(selected)
+
+
+func _set_workshop_selected(selected: bool) -> void:
+	if workshop_rig != null:
+		workshop_rig.set_selected(selected)
+
+
+func _on_workshop_cell(cell: Vector2i) -> bool:
+	var center := PlotGrid.cell_center(cell)
+	return Vector2(center.x, center.z).distance_to(Vector2(WorkshopRig.WORLD_POSITION.x, WorkshopRig.WORLD_POSITION.z)) < 1.15
+
+
+func _connect_hud() -> void:
+	if not hud.remove_pressed.is_connected(_on_remove_marker):
+		hud.remove_pressed.connect(_on_remove_marker)
+	if not hud.harvest_pressed.is_connected(harvest_plot):
+		hud.harvest_pressed.connect(harvest_plot)
+	if not hud.workshop_pressed.is_connected(_on_workshop_button):
+		hud.workshop_pressed.connect(_on_workshop_button)
+	if not hud.workshop_start_pressed.is_connected(start_workshop):
+		hud.workshop_start_pressed.connect(start_workshop)
+	if not hud.orders_pressed.is_connected(_on_orders_button):
+		hud.orders_pressed.connect(_on_orders_button)
+	if not hud.order_deliver_pressed.is_connected(fulfill_order):
+		hud.order_deliver_pressed.connect(fulfill_order)
+	if not hud.upgrade_pressed.is_connected(buy_loft):
+		hud.upgrade_pressed.connect(buy_loft)
 
 
 func _on_remove_marker() -> void:
 	remove_marker()
+
+
+func _on_workshop_button() -> void:
+	_set_workshop_selected(true)
+	_set_barn_selected(false)
+	hud.open_workshop(not hud.workshop_open)
+
+
+func _on_orders_button() -> void:
+	hud.open_orders(not hud.orders_open)
