@@ -10,7 +10,7 @@ Commit `1d862f4` on `main` contained only:
 
 There was no Godot project, no scene, no asset, and no design doc in the repo. That tree cannot run a stylized 3D game. It can install the tools a Godot game needs. Those bootstrap files stay. This document describes the project added on top of them.
 
-The repo hosts a Godot 4 game: it imports, the menu loads a farm, and simulation code runs without a renderer. Saves, region data, one barn model, one rigged character, one textile loop (grow, bundle, sell, buy a loft), a two-person crew, a second fiber good, a shuttle-rack speed upgrade, and one paid loom rule are in. The grove trees, the workshop shed, and the plot marker are a first stylized pass. It still cannot host the commercial game. The terrain, crop, loft, and shuttle rack are still placeholders. The loom worker reuses the farmhand mesh. The loom rule is a priority, not a new building.
+The repo hosts a Godot 4 game: it imports, the menu loads a farm, and simulation code runs without a renderer. Saves, region data, one barn model, one rigged character, one textile loop (grow, bundle, sell, buy a loft), a two-person crew, a second fiber good, a shuttle-rack speed upgrade, and one paid loom rule are in. The grove trees, the workshop shed, the plot marker, and the valley ground are a first stylized pass. It still cannot host the commercial game. The crop, loft, and shuttle rack are still placeholders. The loom worker reuses the farmhand mesh. The loom rule is a priority, not a new building.
 
 ## ADR-001 — Godot 4.7 standard, Compatibility renderer
 
@@ -65,6 +65,7 @@ tools/blender/farmhand.py
 tools/blender/tree.py
 tools/blender/workshop.py
 tools/blender/plot_marker.py
+tools/blender/terrain.py
 assets/models/barn.glb
 assets/models/farmhand.glb
 assets/models/tree.glb
@@ -72,7 +73,7 @@ assets/models/workshop.glb
 assets/models/loom_beam.glb
 assets/models/loom_shuttle.glb
 assets/models/plot_marker.glb
-assets/shaders/placeholder_terrain.gdshader
+assets/models/terrain.glb
 ```
 
 Main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is still `first_farm.tscn`. Import cache (`.godot/`) is gitignored. `*.uid` and `*.import` files are committed so Godot keeps resource ids. `*.glb` is Git LFS.
@@ -100,7 +101,7 @@ Renaming these is an interface change. Update `tests/run_scene_checks.gd` and [i
 
 ## Performance
 
-No budget has been measured. The first scene is one subdivided plane, a handful of primitives, and one directional shadow. That is not a stress test. Do not add occlusion systems or LOD for it. Do measure before replacing the terrain with a large imported mesh.
+No budget has been measured. The ground is one imported valley mesh of 32768 triangles, plus the barn, the grove, and a handful of primitives, with one directional shadow. That is not a stress test. Do not add occlusion systems or a second terrain LOD for it.
 
 ## Agents
 

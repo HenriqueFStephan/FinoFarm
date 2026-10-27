@@ -94,7 +94,7 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 `tests/run_scene_checks.gd` loads scenes after the tree is up (`call_deferred`, because `_initialize` runs too early).
 
 - Main scene path is the menu.
-- The farm has placeholder terrain, an imported barn mesh, three imported trees, the farmhand, and the camera.
+- The farm has an imported valley mesh, an imported barn mesh, three imported trees, the farmhand, and the camera. The valley check rejects the old edge shader.
 - The workshop shed, loom beam, shuttle, and plot marker are imported glTF files. Row, sprout, leaf, and ready on the fiber plot stay distinct.
 - The farmhand has a skeleton. `walk` and `idle` exist. `advance(1.0)` moves about `1.7` units and leaves `walk` playing.
 - The HUD name, region, and funds come from a save written in the test.
