@@ -1,6 +1,6 @@
 # FinoFarm game design
 
-Status: Milestone 0. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
+Status: Milestone 5 adds one paid loom rule on top of the Milestone 4 production choice. Milestone 6's first slice replaces the grove trees, the workshop shed, and the plot marker with a stylized pass. The full vision is [the charter](charter.md). This document is the design that current and next tasks implement against.
 
 ## Player fantasy
 
@@ -25,19 +25,29 @@ The first recipes are a textile chain, defined in `scripts/simulation/catalog.gd
 | Recipe | Inputs | Output | Ticks |
 | --- | --- | --- | --- |
 | `bundle_fiber` | 2 Verdant Fiber | 1 Fiber Bundle | 4 |
+| `twist_cord` | 2 Verdant Fiber | 1 Fiber Cord | 5 |
 | `pack_textile` | 1 Fiber Bundle + 1 Seal Wax | 1 Packed Textile | 3 |
 
-One tick is one simulated second. Splitting that second across frames does not change the result. The farm scene does not run this workshop yet. Milestone 2 puts it on screen. Tests cover it now.
+One tick is one simulated second. Splitting that second across frames does not change the result. The farm scene runs the bundle and cord recipes through `SimStepper`. Both fiber recipes spend a full harvest. `pack_textile` stays in the catalog for a later chain. It is not on the order board yet.
+
+Verdant Fiber on the placed plot uses the same clock. `ResourceCatalog.growth` sets 4 visual stages (row, sprout, leaf, ready), 2 ticks each, yield 2, grade common. The grade is assigned by that table. Nothing in the plot computes a grow recipe.
+
+The intro order `intro_bundle` pays 180 for one Fiber Bundle. The lane order `lane_cord` pays 240 for one Fiber Cord. The barn loft costs 400. The richest starting purse is Tropical Valley at 360, so the loft is unaffordable until the intro order pays. Innovation Plains starts at 240 and can afford it after the same payment (20 left). The shuttle rack costs 160 and shortens the next loom job by one tick. It is purchased only after the loft. The loom rule costs 120 and does not require the loft. It is sold only after Mara's lesson. A new farm still starts with 4 Verdant Fiber so the save has a real stack. That stack is not a harvest. One harvest is 2, and each of the two goods spends 2.
 
 ## What this build lets the player do
 
-Launch Godot and look at the first farm.
+Launch Godot. The main menu sits on a 3D farm. New Game asks for a name and one of the four regions, writes a schema-1 save, and opens that farm. My Farms lists every save. Continue is available once a save exists.
 
-- Pan, zoom, and orbit a three-quarter camera.
-- See terrain, a dirt loop, one building, three trees, and a character.
-- The character walks the loop and swings their limbs while moving.
+- Pan, zoom, and orbit the same three-quarter camera.
+- See a small valley, a dirt loop, one barn, three grove trees, an open workshop shed, and a farmhand whose walk clip plays while they move. The trees, the shed, the plot stake, and the ground are a first stylized pass. The fiber plot still changes shape at row, sprout, leaf, and ready.
+- Place, move, and remove one plot marker on the grid. Placing it starts Verdant Fiber. Clicking the barn selects it. Clicking the workshop shed opens the bundle job.
+- The HUD shows the farm name, region, funds, inventory, and a short prompt from Mara, the advisor voice. Mara is text on the HUD. She is not a new character model.
+- Harvest the ready plot, bundle two fibers, deliver the trail-stall order, and buy the barn loft. The tutorial blocks those buttons until the matching step. After the loft, the prompt says the loop is done.
+- After that lesson, open Crew. Two candidates are listed with the six ratings. Hire one and assign them to the workshop. The next bundle is shorter when their attribute total is higher. The hired person stands at the shed and plays a work clip while the loom runs.
+- After that lesson, the workshop can also twist a Fiber Cord from the same Verdant Fiber. The order board shows both the trail stall and the lane counter. Delivering one does not deliver the other. The inventory line names both goods. The shuttle rack is a second building purchase. It appears on the shed and shortens the next job.
+- After that lesson, buy the loom rule for 120. The workshop card then shows a Fiber Bundle priority and a Fiber Cord priority. When the plot is ready and a worker is assigned, the loom starts the chosen good. The player does not click Start for that job. A job that is already running keeps its recipe. Without the purchase, and during Mara's lesson, the player still starts the job by hand.
 
-There is no menu, save, currency, placement, or hiring yet. Those are Milestone 1 and later. See [the vertical slice](vertical-slice-m1.md).
+`pack_textile` is still later. See [the vertical slice](vertical-slice-m1.md) for what Milestone 1 added. Wages are listed and not charged. Training and experience are not in this build.
 
 ## Camera
 
@@ -47,18 +57,27 @@ The camera orbits a focus point. Pitch stays between about 20° and 66° so the 
 
 Plan, operate, produce, fulfill an order, earn, improve, expand, automate.
 
-The early-game teaching sequence in the charter (inherit a farm, restore a field, finish one production cycle, deliver an order, hire, upgrade) is the Milestone 2 tutorial. Milestone 1 only has to reach a farm you created and can look around, with save/load and a real character. Do not pretend the walking placeholder completes that loop.
+The Milestone 2 tutorial is the part of that sequence this build can play: place a plot, wait out the fiber timer, harvest, bundle, deliver, and buy the loft. Mara's lines and step order are unchanged. Crew opens after that lesson. The cord, the lane order, the shuttle rack, and the loom rule open after that lesson too. The lesson itself stays a hand start. Do not treat the walking farmhand as an employee.
 
 ## Characters
 
-Workers will have Efficiency, Technical Skill, Creativity, Organization, Social Skill, and Adaptability, each from 1 to 10, plus traits. Alex Morgan in the charter is an example, not a character who exists in the scene.
+Workers have Efficiency, Technical Skill, Creativity, Organization, Social Skill, and Adaptability, each from 1 to 10.
 
-The figure in the first scene is an unnamed block-out. They walk. They have no stats, no job, and no authored animation clip.
+The recruitment list has two people:
+
+| Id | Role | Total | Bundle ticks |
+| --- | --- | --- | --- |
+| `alex_morgan` | Junior Technician | 33 | 2 |
+| `bram_holt` | Yard Hand | 23 | 3 |
+
+Alex uses the charter's example ratings: 6, 8, 4, 5, 3, 7. Bram is lower on the bench and higher with people. The pace rule is `max(1, catalog_duration - floor(total / 12))`. Nobody assigned keeps the catalog's 4 ticks, so the lesson does not speed up by itself. The bundle still outputs 1. A job that has already started keeps its ticks if the player switches the assignee.
+
+The figure who walks the path is still not an employee. The person at the loom is a second instance of that same mesh, with the hired name above them. The `work` clip plays only while the workshop job is busy.
+
+## Out of scope for this build
+
+Wages are shown and not deducted. Experience, training, and traits that change ratings are later. `pack_textile` stays off the board and is not a loom priority. A wider research tree, audio, weather, and final models are later. This build has one research unlock, the loom rule. The shuttle rack changes speed only. It does not add a second loom. The loom rule does not replace a job that has already started.
 
 ## Regions
 
-Later data, not this build. The charter's four starting sketches (Northern Homestead, Tropical Valley, Innovation Plains, Golden Fields) are balancing sketches. Implement them as rows in a catalog (task FF-11), not as hard-coded scene logic.
-
-## Out of scope until a later milestone
-
-Main menu, saves, placement, inventory UI, orders, wages, research, audio, weather, and final models.
+The four starting regions are catalog rows (task FF-11), not hard-coded scene logic. They are balancing sketches, not geography.

@@ -1,0 +1,41 @@
+[gd_scene load_steps=7 format=3]
+
+[sub_resource type="BoxMesh" id="RailMesh"]
+size = Vector3(0.72, 0.08, 0.16)
+
+[sub_resource type="StandardMaterial3D" id="WoodMat"]
+albedo_color = Color(0.431, 0.29, 0.173, 1)
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="ShuttleMesh"]
+size = Vector3(0.22, 0.1, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="AmberMat"]
+albedo_color = Color(0.776, 0.478, 0.18, 1)
+roughness = 0.62
+
+[sub_resource type="BoxMesh" id="PostMesh"]
+size = Vector3(0.08, 0.22, 0.08)
+
+[node name="PlaceholderShuttleRack" type="Node3D"]
+visible = false
+
+[node name="Rail" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.22, 0)
+mesh = SubResource("RailMesh")
+surface_material_override/0 = SubResource("WoodMat")
+
+[node name="Post" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.11, 0)
+mesh = SubResource("PostMesh")
+surface_material_override/0 = SubResource("WoodMat")
+
+[node name="ShuttleA" type="MeshInstance3D" parent="."]
+position = Vector3(-0.18, 0.32, 0)
+mesh = SubResource("ShuttleMesh")
+surface_material_override/0 = SubResource("AmberMat")
+
+[node name="ShuttleB" type="MeshInstance3D" parent="."]
+position = Vector3(0.18, 0.32, 0)
+mesh = SubResource("ShuttleMesh")
+surface_material_override/0 = SubResource("AmberMat")

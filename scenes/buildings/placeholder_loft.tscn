@@ -1,0 +1,40 @@
+[gd_scene load_steps=6 format=3]
+
+[sub_resource type="BoxMesh" id="BodyMesh"]
+size = Vector3(1.15, 0.72, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="BodyMat"]
+albedo_color = Color(0.929, 0.878, 0.769, 1)
+roughness = 0.84
+
+[sub_resource type="BoxMesh" id="RoofMesh"]
+size = Vector3(1.35, 0.16, 1.05)
+
+[sub_resource type="StandardMaterial3D" id="RoofMat"]
+albedo_color = Color(0.549, 0.275, 0.212, 1)
+roughness = 0.78
+
+[sub_resource type="BoxMesh" id="WindowMesh"]
+size = Vector3(0.08, 0.28, 0.36)
+
+[sub_resource type="StandardMaterial3D" id="WindowMat"]
+albedo_color = Color(0.561, 0.718, 0.788, 1)
+roughness = 0.35
+
+[node name="PlaceholderBarnLoft" type="Node3D"]
+visible = false
+
+[node name="Body" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.36, 0)
+mesh = SubResource("BodyMesh")
+surface_material_override/0 = SubResource("BodyMat")
+
+[node name="Roof" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.8, 0)
+mesh = SubResource("RoofMesh")
+surface_material_override/0 = SubResource("RoofMat")
+
+[node name="Window" type="MeshInstance3D" parent="."]
+position = Vector3(0.58, 0.4, 0)
+mesh = SubResource("WindowMesh")
+surface_material_override/0 = SubResource("WindowMat")

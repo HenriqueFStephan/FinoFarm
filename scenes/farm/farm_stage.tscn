@@ -1,0 +1,55 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/buildings/barn.tscn" id="1_barn"]
+[ext_resource type="PackedScene" path="res://scenes/characters/farmhand.tscn" id="2_hand"]
+[ext_resource type="Script" path="res://scripts/camera/farm_camera.gd" id="3_camera"]
+[ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="5_tree"]
+[ext_resource type="PackedScene" path="res://scenes/props/terrain.tscn" id="6_terrain"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.32, 0.55, 0.86, 1)
+sky_horizon_color = Color(0.74, 0.84, 0.9, 1)
+ground_bottom_color = Color(0.29, 0.38, 0.24, 1)
+ground_horizon_color = Color(0.55, 0.62, 0.42, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.64, 0.58, 1)
+ambient_light_energy = 0.28
+tonemap_mode = 2
+tonemap_exposure = 1.0
+
+[node name="FarmStage" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-48, 38, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 0.9
+shadow_enabled = true
+directional_shadow_max_distance = 48.0
+
+[node name="PlaceholderTerrain" parent="." instance=ExtResource("6_terrain")]
+
+[node name="Barn" parent="." instance=ExtResource("1_barn")]
+
+[node name="PlaceholderTreeA" parent="." instance=ExtResource("5_tree")]
+transform = Transform3D(1.02, 0, 0.35, 0, 1.08, 0, -0.35, 0, 1.02, 11.5, 0, -5)
+
+[node name="PlaceholderTreeB" parent="." instance=ExtResource("5_tree")]
+transform = Transform3D(-0.62, 0, 0.62, 0, 0.88, 0, -0.62, 0, -0.62, -11, 0, -2)
+
+[node name="PlaceholderTreeC" parent="." instance=ExtResource("5_tree")]
+transform = Transform3D(0.96, 0, -0.66, 0, 1.16, 0, 0.66, 0, 0.96, 2, 0, -11)
+
+[node name="Farmhand" parent="." instance=ExtResource("2_hand")]
+
+[node name="FarmCamera" type="Camera3D" parent="."]
+script = ExtResource("3_camera")

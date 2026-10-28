@@ -1,6 +1,6 @@
 # FinoFarm art bible
 
-Status: block-out palette and rules. No mesh in the first scene is approved final art.
+Status: cozy stylized direction. The barn, the farmhand, the grove trees, the workshop shed, the plot marker, and the valley ground are in-engine models. They are a first stylized pass, not approved final art. The fiber plot, the selection ring, the barn loft, and the shuttle rack are still placeholders. The person at the loom is a second instance of the farmhand mesh, not a new character.
 
 ## Target
 
@@ -16,16 +16,16 @@ These hex values are the materials on the first scene. Final textures stay in th
 
 | Role | Hex | Use on the first scene |
 | --- | --- | --- |
-| Grass light | `#4D7A3D` | Terrain shader `grass_a` |
-| Grass shadow | `#295224` | Terrain shader `grass_b` |
-| Path | `#855E33` | Dirt loop painted in the terrain shader |
+| Grass light | `#4D7A3D` | Valley floor and lower slopes |
+| Grass shadow | `#295224` | Higher hills on the valley mesh |
+| Path | `#855E33` | Square dirt loop on the valley mesh |
 | Barn wall | `#EDE0C4` | Placeholder barn walls |
 | Barn base | `#735737` | Placeholder slab |
 | Roof | `#8C4636` | Placeholder roof |
 | Door | `#6B4228` | Placeholder door |
 | Window | `#8FB7C9` | Placeholder window, muted teal accent |
-| Trunk | `#6E4A2C` | Placeholder trees |
-| Canopy | `#2F8A45` | Placeholder trees |
+| Trunk | `#6E4A2C` | Grove trees and the plot stake |
+| Canopy | `#2F8A45` | Grove trees |
 | Shirt | `#F3E6C8` | Placeholder walker torso |
 | Pants | `#C67A2E` | Placeholder walker hips and legs |
 | Skin | `#E8C2A0` | Placeholder walker head and arms |
@@ -34,24 +34,23 @@ These hex values are the materials on the first scene. Final textures stay in th
 
 Interface surfaces, when UI arrives, use warm cream panels (`#F3E6C8` range) and amber for rewards. Do not invent a second palette for the menu.
 
-## Placeholders in the first scene
+## In the farm scene
 
-Every mesh below is a Godot primitive or a shader on a plane. There is no Blender source, no texture set, and no approved silhouette. Label them placeholders in reviews, issues, and the asset registry.
+| Node | What it actually is | Status |
+| --- | --- | --- |
+| `PlaceholderTerrain` | glTF from `tools/blender/terrain.py`. Flat yard, the same square dirt loop, and a continuous bank of rounded hills outside the plot grid. The barn pad stays at ground height. | in-engine, first terrain pass |
+| `Barn` | glTF from `tools/blender/barn.py`. Gable roof, doors, windows, cupola. Flat colors from this palette. No textures. | in-engine, not accepted final art |
+| `PlaceholderTreeA`, `PlaceholderTreeB`, `PlaceholderTreeC` | One glTF from `tools/blender/tree.py`, three times, with different scale and yaw. Tapered trunk and a lumpy canopy. | in-engine, first stylized pass |
+| `Farmhand` | glTF from `tools/blender/farmhand.py`. One skin, `idle`, `walk`, and `work` clips. The model child is scaled `1.55` so the figure reads at the default camera. | in-engine, not accepted final art |
+| `WorkshopWorker` | The same glTF, instanced again in front of the shed. `work` plays while the loom job is busy. A name label sits above the figure. | in-engine, not accepted final art |
+| `PlaceholderPlotMarker`, `PlaceholderPlotHover` | glTF from `tools/blender/plot_marker.py`. A tapered stake and a pennant, offset to the plot rim. | in-engine, first stylized pass |
+| `PlaceholderSelectionRing` | Flat cylinder shown when the barn is selected. | placeholder |
+| `PlaceholderCrop` | Disc, nub, stem, sphere, and an amber tuft. Swapped to match the plot stage. | placeholder |
+| `PlaceholderWorkshop` | Shed glTF from `tools/blender/workshop.py`, plus a separate beam and shuttle. The beam spins only while the workshop job is busy. | in-engine, first stylized pass |
+| `PlaceholderBarnLoft` | A box room, a box roof, and a teal window, shown after the loft is bought. | placeholder |
+| `PlaceholderShuttleRack` | A wood rail and two amber boxes on the shed roof, shown after the shuttle rack is bought. | placeholder |
 
-| Node | What it actually is |
-| --- | --- |
-| `PlaceholderTerrain` | Subdivided plane. Shader fakes hills at the edges and a square dirt loop. The center is flat so the walker does not sink. |
-| `PlaceholderBarn` | Boxes for slab, walls, door, and window. `PrismMesh` for the roof. |
-| `PlaceholderTreeA`, `PlaceholderTreeB`, `PlaceholderTreeC` | Cylinder trunk, sphere canopy. |
-| `PlaceholderWalker` | Boxes and a sphere. Limb swing is `sin(distance)` in `placeholder_walker.gd`. It is not a skeleton or an exported clip. |
-
-A captured frame of this scene is a block-out check. It is not art approval. Task FF-8 is a GPU review of the same scene. Tasks FF-18 and FF-19 replace the barn and the walker.
-
-## Future character target
-
-When a real character is modeled, aim for a large readable head, consistent proportions, a role-readable outfit, and clips for idle, walk, carry, celebrate, rest, and equipment interaction. The block-out walker does not meet that target. Its only job is to walk in the engine so later clips have a scene to land in.
-
-Scale in the first scene is `1.25` on `PlaceholderWalker` so the block-out reads at the default camera distance. Do not treat that scale as the final proportion guide.
+Do not describe the ring, crop, loft, or shuttle rack as finished art. Do not describe the barn, the farmhand, the grove trees, the workshop shed, the plot marker, the valley ground, or the workshop worker as approved final assets. The trees, the shed, the marker, and the ground are the first stylized pass. The worker is the farmhand mesh again, not a portrait of Alex or Bram. `work` is an in-place arm pass while the loom job is busy. Carry, celebrate, and rest clips are not in this build. The old box walker and its sine-wave swing are gone. The old cylinder trees, box shed, and box flag are gone. The old flat terrain plane and its edge shader are gone. The loom spin is a presentation of the busy flag, not a finished machine animation.
 
 ## Camera readability
 

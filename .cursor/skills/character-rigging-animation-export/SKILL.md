@@ -5,7 +5,7 @@ description: Rig a FinoFarm character in Blender and export idle and walk clips 
 
 # Character rigging and animation export
 
-`PlaceholderWalker` is boxes plus a sine swing. It is not a rig. Task FF-19 replaces it. Do not describe the sine swing as an animation clip.
+`Farmhand` is the in-engine character: `assets/models/farmhand.glb`, clips `idle` and `walk`, driven by `scripts/characters/farmhand.gd`. The old box walker is gone. Do not describe a sine swing as an animation clip. New clips extend this rig instead of adding a second body.
 
 ## Steps
 

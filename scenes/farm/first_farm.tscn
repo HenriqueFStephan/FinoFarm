@@ -1,275 +1,57 @@
-[gd_scene load_steps=31 format=3]
+[gd_scene load_steps=11 format=3]
 
-[ext_resource type="Shader" path="res://assets/shaders/placeholder_terrain.gdshader" id="1_shader"]
-[ext_resource type="Script" path="res://scripts/characters/placeholder_walker.gd" id="2_walker"]
-[ext_resource type="Script" path="res://scripts/camera/farm_camera.gd" id="3_camera"]
+[ext_resource type="PackedScene" path="res://scenes/farm/farm_stage.tscn" id="1_stage"]
+[ext_resource type="Script" path="res://scripts/farm/farm_session.gd" id="2_play"]
+[ext_resource type="Script" path="res://scripts/ui/farm_hud.gd" id="3_hud"]
+[ext_resource type="PackedScene" path="res://scenes/props/plot_marker.tscn" id="4_marker"]
+[ext_resource type="PackedScene" path="res://scenes/props/placeholder_crop.tscn" id="5_crop"]
+[ext_resource type="PackedScene" path="res://scenes/buildings/placeholder_workshop.tscn" id="6_shop"]
+[ext_resource type="PackedScene" path="res://scenes/buildings/placeholder_loft.tscn" id="7_loft"]
+[ext_resource type="PackedScene" path="res://scenes/characters/workshop_worker.tscn" id="8_worker"]
+[ext_resource type="PackedScene" path="res://scenes/buildings/placeholder_shuttle_rack.tscn" id="9_rack"]
 
-[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
-sky_top_color = Color(0.32, 0.55, 0.86, 1)
-sky_horizon_color = Color(0.74, 0.84, 0.9, 1)
-ground_bottom_color = Color(0.29, 0.38, 0.24, 1)
-ground_horizon_color = Color(0.55, 0.62, 0.42, 1)
+[sub_resource type="CylinderMesh" id="RingMesh"]
+top_radius = 2.35
+bottom_radius = 2.35
+height = 0.05
+radial_segments = 28
 
-[sub_resource type="Sky" id="Sky"]
-sky_material = SubResource("SkyMat")
-
-[sub_resource type="Environment" id="Environment_main"]
-background_mode = 2
-sky = SubResource("Sky")
-ambient_light_source = 2
-ambient_light_color = Color(0.55, 0.64, 0.58, 1)
-ambient_light_energy = 0.28
-tonemap_mode = 2
-tonemap_exposure = 1.0
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
-size = Vector2(48, 48)
-subdivide_width = 48
-subdivide_depth = 48
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_terrain"]
-shader = ExtResource("1_shader")
-shader_parameter/grass_a = Color(0.3, 0.48, 0.24, 1)
-shader_parameter/grass_b = Color(0.16, 0.32, 0.14, 1)
-shader_parameter/path_color = Color(0.52, 0.37, 0.2, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_slab"]
-size = Vector3(5.5, 0.18, 4.5)
-
-[sub_resource type="StandardMaterial3D" id="Mat_slab"]
-albedo_color = Color(0.45, 0.34, 0.22, 1)
-roughness = 0.95
-
-[sub_resource type="BoxMesh" id="BoxMesh_walls"]
-size = Vector3(5, 2.5, 4)
-
-[sub_resource type="StandardMaterial3D" id="Mat_walls"]
-albedo_color = Color(0.929, 0.878, 0.769, 1)
-roughness = 0.82
-
-[sub_resource type="PrismMesh" id="PrismMesh_roof"]
-size = Vector3(5.7, 1.6, 4.6)
-
-[sub_resource type="StandardMaterial3D" id="Mat_roof"]
-albedo_color = Color(0.549, 0.275, 0.212, 1)
-roughness = 0.78
-
-[sub_resource type="BoxMesh" id="BoxMesh_door"]
-size = Vector3(1.15, 1.7, 0.1)
-
-[sub_resource type="StandardMaterial3D" id="Mat_door"]
-albedo_color = Color(0.42, 0.259, 0.157, 1)
-roughness = 0.7
-
-[sub_resource type="BoxMesh" id="BoxMesh_window"]
-size = Vector3(0.7, 0.55, 0.08)
-
-[sub_resource type="StandardMaterial3D" id="Mat_window"]
-albedo_color = Color(0.561, 0.718, 0.788, 1)
-roughness = 0.25
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_trunk"]
-top_radius = 0.12
-bottom_radius = 0.16
-height = 1.15
-radial_segments = 8
-
-[sub_resource type="StandardMaterial3D" id="Mat_trunk"]
-albedo_color = Color(0.431, 0.29, 0.173, 1)
-roughness = 0.9
-
-[sub_resource type="SphereMesh" id="SphereMesh_canopy"]
-radius = 0.78
-height = 1.35
-radial_segments = 16
-rings = 8
-
-[sub_resource type="StandardMaterial3D" id="Mat_canopy"]
-albedo_color = Color(0.184, 0.541, 0.271, 1)
-roughness = 0.88
-
-[sub_resource type="BoxMesh" id="BoxMesh_torso"]
-size = Vector3(0.5, 0.56, 0.3)
-
-[sub_resource type="StandardMaterial3D" id="Mat_shirt"]
-albedo_color = Color(0.953, 0.902, 0.784, 1)
-roughness = 0.75
-
-[sub_resource type="BoxMesh" id="BoxMesh_hips"]
-size = Vector3(0.46, 0.26, 0.28)
-
-[sub_resource type="StandardMaterial3D" id="Mat_pants"]
-albedo_color = Color(0.776, 0.478, 0.18, 1)
-roughness = 0.8
-
-[sub_resource type="SphereMesh" id="SphereMesh_head"]
-radius = 0.26
-height = 0.52
-radial_segments = 16
-rings = 8
-
-[sub_resource type="StandardMaterial3D" id="Mat_skin"]
-albedo_color = Color(0.91, 0.761, 0.627, 1)
-roughness = 0.7
-
-[sub_resource type="BoxMesh" id="BoxMesh_leg"]
-size = Vector3(0.16, 0.64, 0.16)
-
-[sub_resource type="BoxMesh" id="BoxMesh_arm"]
-size = Vector3(0.12, 0.5, 0.12)
+[sub_resource type="StandardMaterial3D" id="RingMat"]
+transparency = 1
+albedo_color = Color(0.561, 0.718, 0.788, 0.55)
+roughness = 0.45
 
 [node name="FirstFarm" type="Node3D"]
+script = ExtResource("2_play")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_main")
+[node name="Stage" parent="." instance=ExtResource("1_stage")]
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
-rotation_degrees = Vector3(-48, 38, 0)
-light_color = Color(1, 0.96, 0.88, 1)
-light_energy = 0.9
-shadow_enabled = true
-directional_shadow_max_distance = 48.0
+[node name="PlaceholderPlotMarker" parent="." instance=ExtResource("4_marker")]
+visible = false
 
-[node name="PlaceholderTerrain" type="MeshInstance3D" parent="."]
-mesh = SubResource("PlaneMesh_ground")
-surface_material_override/0 = SubResource("ShaderMaterial_terrain")
+[node name="PlaceholderPlotHover" parent="." instance=ExtResource("4_marker")]
+transform = Transform3D(0.72, 0, 0, 0, 0.72, 0, 0, 0, 0.72, 0, 0, 0)
+visible = false
 
-[node name="PlaceholderBarn" type="Node3D" parent="."]
+[node name="PlaceholderSelectionRing" type="MeshInstance3D" parent="."]
+visible = false
+position = Vector3(0, 0.04, 0)
+mesh = SubResource("RingMesh")
+surface_material_override/0 = SubResource("RingMat")
 
-[node name="Slab" type="MeshInstance3D" parent="PlaceholderBarn"]
-position = Vector3(0, 0.09, 0)
-mesh = SubResource("BoxMesh_slab")
-surface_material_override/0 = SubResource("Mat_slab")
+[node name="PlaceholderCrop" parent="." instance=ExtResource("5_crop")]
 
-[node name="Walls" type="MeshInstance3D" parent="PlaceholderBarn"]
-position = Vector3(0, 1.43, 0)
-mesh = SubResource("BoxMesh_walls")
-surface_material_override/0 = SubResource("Mat_walls")
+[node name="PlaceholderWorkshop" parent="." instance=ExtResource("6_shop")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.4, 0, 2.8)
 
-[node name="Roof" type="MeshInstance3D" parent="PlaceholderBarn"]
-position = Vector3(0, 3.48, 0)
-mesh = SubResource("PrismMesh_roof")
-surface_material_override/0 = SubResource("Mat_roof")
+[node name="WorkshopWorker" parent="." instance=ExtResource("8_worker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.15, 0, 4.95)
 
-[node name="Door" type="MeshInstance3D" parent="PlaceholderBarn"]
-position = Vector3(0, 1.03, 2.02)
-mesh = SubResource("BoxMesh_door")
-surface_material_override/0 = SubResource("Mat_door")
+[node name="PlaceholderBarnLoft" parent="." instance=ExtResource("7_loft")]
+transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, 2.65, 2.72, 1.45)
 
-[node name="Window" type="MeshInstance3D" parent="PlaceholderBarn"]
-position = Vector3(1.35, 1.85, 2.02)
-mesh = SubResource("BoxMesh_window")
-surface_material_override/0 = SubResource("Mat_window")
-
-[node name="PlaceholderTreeA" type="Node3D" parent="."]
-position = Vector3(11.5, 0, -5)
-
-[node name="Trunk" type="MeshInstance3D" parent="PlaceholderTreeA"]
-position = Vector3(0, 0.58, 0)
-mesh = SubResource("CylinderMesh_trunk")
-surface_material_override/0 = SubResource("Mat_trunk")
-
-[node name="Canopy" type="MeshInstance3D" parent="PlaceholderTreeA"]
-position = Vector3(0, 1.55, 0)
-mesh = SubResource("SphereMesh_canopy")
-surface_material_override/0 = SubResource("Mat_canopy")
-
-[node name="PlaceholderTreeB" type="Node3D" parent="."]
-position = Vector3(-11, 0, -2)
-
-[node name="Trunk" type="MeshInstance3D" parent="PlaceholderTreeB"]
-position = Vector3(0, 0.58, 0)
-mesh = SubResource("CylinderMesh_trunk")
-surface_material_override/0 = SubResource("Mat_trunk")
-
-[node name="Canopy" type="MeshInstance3D" parent="PlaceholderTreeB"]
-position = Vector3(0, 1.55, 0)
-mesh = SubResource("SphereMesh_canopy")
-surface_material_override/0 = SubResource("Mat_canopy")
-
-[node name="PlaceholderTreeC" type="Node3D" parent="."]
-position = Vector3(2, 0, -11)
-
-[node name="Trunk" type="MeshInstance3D" parent="PlaceholderTreeC"]
-position = Vector3(0, 0.58, 0)
-mesh = SubResource("CylinderMesh_trunk")
-surface_material_override/0 = SubResource("Mat_trunk")
-
-[node name="Canopy" type="MeshInstance3D" parent="PlaceholderTreeC"]
-position = Vector3(0, 1.55, 0)
-mesh = SubResource("SphereMesh_canopy")
-surface_material_override/0 = SubResource("Mat_canopy")
-
-[node name="PlaceholderWalker" type="Node3D" parent="."]
-transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 0, 0, 0)
-script = ExtResource("2_walker")
-
-[node name="Torso" type="MeshInstance3D" parent="PlaceholderWalker"]
-position = Vector3(0, 1.2, 0)
-mesh = SubResource("BoxMesh_torso")
-surface_material_override/0 = SubResource("Mat_shirt")
-
-[node name="Hips" type="MeshInstance3D" parent="PlaceholderWalker"]
-position = Vector3(0, 0.78, 0)
-mesh = SubResource("BoxMesh_hips")
-surface_material_override/0 = SubResource("Mat_pants")
-
-[node name="Head" type="MeshInstance3D" parent="PlaceholderWalker"]
-position = Vector3(0, 1.68, 0)
-mesh = SubResource("SphereMesh_head")
-surface_material_override/0 = SubResource("Mat_skin")
-
-[node name="LegL" type="Node3D" parent="PlaceholderWalker"]
-position = Vector3(-0.12, 0.7, 0)
-
-[node name="Mesh" type="MeshInstance3D" parent="PlaceholderWalker/LegL"]
-position = Vector3(0, -0.32, 0)
-mesh = SubResource("BoxMesh_leg")
-surface_material_override/0 = SubResource("Mat_pants")
-
-[node name="LegR" type="Node3D" parent="PlaceholderWalker"]
-position = Vector3(0.12, 0.7, 0)
-
-[node name="Mesh" type="MeshInstance3D" parent="PlaceholderWalker/LegR"]
-position = Vector3(0, -0.32, 0)
-mesh = SubResource("BoxMesh_leg")
-surface_material_override/0 = SubResource("Mat_pants")
-
-[node name="ArmL" type="Node3D" parent="PlaceholderWalker"]
-position = Vector3(-0.34, 1.28, 0)
-
-[node name="Mesh" type="MeshInstance3D" parent="PlaceholderWalker/ArmL"]
-position = Vector3(0, -0.26, 0)
-mesh = SubResource("BoxMesh_arm")
-surface_material_override/0 = SubResource("Mat_skin")
-
-[node name="ArmR" type="Node3D" parent="PlaceholderWalker"]
-position = Vector3(0.34, 1.28, 0)
-
-[node name="Mesh" type="MeshInstance3D" parent="PlaceholderWalker/ArmR"]
-position = Vector3(0, -0.26, 0)
-mesh = SubResource("BoxMesh_arm")
-surface_material_override/0 = SubResource("Mat_skin")
-
-[node name="FarmCamera" type="Camera3D" parent="."]
-script = ExtResource("3_camera")
+[node name="PlaceholderShuttleRack" parent="." instance=ExtResource("9_rack")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.35, 1.48, 2.35)
 
 [node name="Hud" type="CanvasLayer" parent="."]
-
-[node name="Hint" type="Label" parent="Hud"]
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = -42.0
-offset_right = -16.0
-offset_bottom = -12.0
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.98, 0.961, 0.902, 1)
-theme_override_colors/font_shadow_color = Color(0.12, 0.14, 0.1, 0.85)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 18
-text = "Right-drag or Q/E orbit    Middle-drag or WASD pan    Wheel or +/- zoom"
-horizontal_alignment = 1
+script = ExtResource("3_hud")

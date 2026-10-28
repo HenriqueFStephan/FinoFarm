@@ -10,7 +10,7 @@ Commit `1d862f4` on `main` contained only:
 
 There was no Godot project, no scene, no asset, and no design doc in the repo. That tree cannot run a stylized 3D game. It can install the tools a Godot game needs. Those bootstrap files stay. This document describes the project added on top of them.
 
-After this change, the repo can host a Godot 4 game: it imports, the main scene loads, and simulation code runs without a renderer. It still cannot host the commercial game. There is no save system, no content pipeline beyond primitives, and no UI flow.
+The repo hosts a Godot 4 game: it imports, the menu loads a farm, and simulation code runs without a renderer. Saves, region data, one barn model, one rigged character, one textile loop (grow, bundle, sell, buy a loft), a two-person crew, a second fiber good, a shuttle-rack speed upgrade, and one paid loom rule are in. The grove trees, the workshop shed, the plot marker, and the valley ground are a first stylized pass. It still cannot host the commercial game. The crop, loft, and shuttle rack are still placeholders. The loom worker reuses the farmhand mesh. The loom rule is a priority, not a new building.
 
 ## ADR-001 — Godot 4.7 standard, Compatibility renderer
 
@@ -28,7 +28,7 @@ Decision: economy code is `RefCounted` types under `scripts/simulation/`. Tests 
 
 Why: the charter requires timers and rewards to be testable without rendering, and to be stable if a frame is long or short.
 
-Consequences: presentation code may call `SimStepper.step(delta_seconds)`. It must not reimplement durations or grade rules. The first farm scene does not call the stepper yet. That is intentional. Milestone 0's playable promise is the camera and the walker. Wiring a hidden workshop into the scene would look like a feature that is not on screen.
+Consequences: presentation code calls `SimStepper.step(delta_seconds)` from `FarmLoop`. It must not reimplement durations or grade rules. The loom spin reads `Workshop.is_busy()` and does not advance the job.
 
 Tick length is 1000 ms inside `SimClock`. `advance` rounds seconds to milliseconds. Negative time does nothing. A workshop that receives extra ticks after a job finishes does not start another job by itself.
 
@@ -36,40 +36,72 @@ Tick length is 1000 ms inside `SimClock`. `advance` rounds seconds to millisecon
 
 ```
 project.godot
+scenes/menu/main_menu.tscn
 scenes/farm/first_farm.tscn
+scenes/farm/farm_stage.tscn
+scenes/buildings/barn.tscn
+scenes/characters/farmhand.tscn
+scenes/characters/workshop_worker.tscn
 scripts/camera/farm_camera.gd
-scripts/characters/placeholder_walker.gd
+scripts/characters/farmhand.gd
+scripts/characters/workshop_worker.gd
+scripts/farm/farm_session.gd
+scripts/presentation/
+scripts/ui/
 scripts/simulation/
 tests/run_simulation_tests.gd
+tests/run_region_tests.gd
+tests/run_save_load_tests.gd
+tests/run_placement_tests.gd
+tests/run_economy_tests.gd
+tests/run_staff_tests.gd
+tests/run_priority_tests.gd
+tests/run_automation_tests.gd
 tests/run_scene_checks.gd
 tools/validate.sh
 tools/capture_farm.gd
-assets/shaders/placeholder_terrain.gdshader
+tools/blender/barn.py
+tools/blender/farmhand.py
+tools/blender/tree.py
+tools/blender/workshop.py
+tools/blender/plot_marker.py
+tools/blender/terrain.py
+assets/models/barn.glb
+assets/models/farmhand.glb
+assets/models/tree.glb
+assets/models/workshop.glb
+assets/models/loom_beam.glb
+assets/models/loom_shuttle.glb
+assets/models/plot_marker.glb
+assets/models/terrain.glb
 ```
 
-Main scene is `res://scenes/farm/first_farm.tscn`. Import cache (`.godot/`) is gitignored. `*.uid` and `icon.svg.import` are committed so Godot keeps resource ids.
+Main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is still `first_farm.tscn`. Import cache (`.godot/`) is gitignored. `*.uid` and `*.import` files are committed so Godot keeps resource ids. `*.glb` is Git LFS.
 
 Autoloads: none. Add one only when two systems need a shared object and a direct reference is awkward. Do not add an autoload for the workshop ahead of the screen that uses it.
 
 ## Scene contract
 
-`FirstFarm` children that other tasks may rely on:
+`FirstFarm` instances `FarmStage`. Nodes other tasks may rely on:
 
-- `PlaceholderTerrain`
-- `PlaceholderBarn` with `Walls`, `Roof`, `Door`
-- `PlaceholderWalker` (script `advance(delta)`)
-- `FarmCamera` (script `orbit`, `zoom_by`, `pan_keys`, `pan_screen`)
-- `Hud/Hint` for the control line
+- `Stage/PlaceholderTerrain`
+- `Stage/Barn` (glTF instance, not a primitive)
+- `Stage/Farmhand` (script `advance(delta)`, clips `idle` and `walk`)
+- `Stage/FarmCamera` (script `orbit`, `zoom_by`, `pan_keys`, `pan_screen`)
+- `Hud` labels bound from the save
+- `PlaceholderPlotMarker`
+- `WorkshopWorker` (hidden until a hire is assigned; `work` clip while the loom is busy)
+- `PlaceholderShuttleRack` (hidden until `shuttle_rack` is owned)
 
 Renaming these is an interface change. Update `tests/run_scene_checks.gd` and [interface contracts](interface-contracts.md) in the same commit.
 
 ## Persistence
 
-Not implemented. Milestone 1 task FF-12 adds schema version 1. Until that lands, do not write save files from experimental scripts.
+`FarmLibrary` stores one JSON file per farm under `user://saves`, schema 1. The menu writes a farm, sets it active, and the farm scene loads that id. Direct launches with no active save stay in memory and do not create a file. See the save section of [interface contracts](interface-contracts.md).
 
 ## Performance
 
-No budget has been measured. The first scene is one subdivided plane, a handful of primitives, and one directional shadow. That is not a stress test. Do not add occlusion systems or LOD for it. Do measure before replacing the terrain with a large imported mesh.
+No budget has been measured. The ground is one imported valley mesh of 32768 triangles, plus the barn, the grove, and a handful of primitives, with one directional shadow. That is not a stress test. Do not add occlusion systems or a second terrain LOD for it.
 
 ## Agents
 

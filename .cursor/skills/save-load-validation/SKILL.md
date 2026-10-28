@@ -5,7 +5,7 @@ description: Add or extend FinoFarm save and load tests. Use when implementing p
 
 # Save and load validation
 
-No save file is written today. The shape is reserved in `docs/interface-contracts.md` under "Save schema (not implemented)". Task FF-12 adds the code and the test. Do not start a second save format.
+Schema 1 is `scripts/simulation/save_game.gd` and `scripts/simulation/farm_library.gd`. `tests/run_save_load_tests.gd` is wired into `tools/validate.sh`. Do not start a second save format. Extend schema 1 until a real schema 2 migration exists.
 
 ## Steps
 

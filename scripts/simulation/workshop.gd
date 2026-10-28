@@ -11,7 +11,7 @@ func _init(starting_inventory: FarmInventory) -> void:
 	inventory = starting_inventory
 
 
-func try_start(recipe_id: String, grades_by_input: Dictionary) -> String:
+func try_start(recipe_id: String, grades_by_input: Dictionary, duration_ticks: int = -1) -> String:
 	if active_recipe_id != "":
 		return "busy"
 	var recipe := ResourceCatalog.recipe(recipe_id)
@@ -34,7 +34,10 @@ func try_start(recipe_id: String, grades_by_input: Dictionary) -> String:
 		if not inventory.remove(resource_id, grade, int(input["amount"])):
 			return "missing_inputs"
 	active_recipe_id = recipe_id
-	ticks_remaining = int(recipe["duration_ticks"])
+	var duration := int(recipe["duration_ticks"])
+	if duration_ticks >= 1:
+		duration = duration_ticks
+	ticks_remaining = duration
 	locked_grade = GradeScale.minimum(grades)
 	return ""
 
@@ -65,3 +68,17 @@ func tick(count: int = 1) -> Dictionary:
 
 func is_busy() -> bool:
 	return active_recipe_id != ""
+
+
+func export_job() -> Dictionary:
+	return {
+		"recipe_id": active_recipe_id,
+		"ticks_remaining": ticks_remaining,
+		"locked_grade": locked_grade,
+	}
+
+
+func import_job(data: Dictionary) -> void:
+	active_recipe_id = str(data.get("recipe_id", ""))
+	ticks_remaining = int(data.get("ticks_remaining", 0))
+	locked_grade = int(data.get("locked_grade", 0))
