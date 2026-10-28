@@ -4,6 +4,30 @@ Stylized 3D farming and business simulation, built in Godot 4.7 with GDScript.
 
 The game opens on a 3D main menu. New Game asks for a farm name and one of four fictional regions, then loads that farm. The farm has a modeled barn, a rigged character with a walk cycle, a camera that pans, zooms, and orbits, and one grid plot. Placing the plot starts Verdant Fiber on a timer. The player harvests it, bundles it in the workshop, delivers one order, and buys a barn loft. Recipes are fictional timers and grades. They are not a cultivation guide.
 
+## Play on your machine
+
+Henrique Ferreira Stephan can run this branch locally:
+
+1. Clone the repository and check out `cursor/farm-terrain-valley-a545`. `main` does not contain the game yet.
+
+   ```bash
+   git clone https://github.com/HenriqueFStephan/FinoFarm
+   cd FinoFarm
+   git checkout cursor/farm-terrain-valley-a545
+   ```
+
+2. Install Git LFS hooks and download the art files:
+
+   ```bash
+   git lfs install && git lfs pull
+   ```
+
+3. Install Godot 4.7.2 standard (GDScript, not .NET) from https://godotengine.org/download/archive/4.7.2-stable/
+
+4. Open the project folder in Godot (the folder that contains `project.godot`) and press Play (F5). The main scene is the main menu (`res://scenes/menu/main_menu.tscn`).
+
+5. The farm already shows its controls: place a plot, use the workshop, open the order board, hire crew, and pan, zoom, or orbit the camera.
+
 ## Run
 
 ```bash
