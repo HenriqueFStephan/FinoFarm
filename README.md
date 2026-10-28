@@ -6,14 +6,13 @@ The game opens on a 3D main menu. New Game asks for a farm name and one of four 
 
 ## Play on your machine
 
-Henrique Ferreira Stephan can run this branch locally:
+Henrique Ferreira Stephan can run the game locally from the default `main` branch:
 
-1. Clone the repository and check out `cursor/farm-terrain-valley-a545`. `main` does not contain the game yet.
+1. Clone the repository. `main` is the default branch and already contains the game.
 
    ```bash
    git clone https://github.com/HenriqueFStephan/FinoFarm
    cd FinoFarm
-   git checkout cursor/farm-terrain-valley-a545
    ```
 
 2. Install Git LFS hooks and download the art files:
