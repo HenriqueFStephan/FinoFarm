@@ -14,6 +14,12 @@ signal crew_pressed
 signal hire_requested(worker_id: String)
 signal assign_requested(worker_id: String)
 signal research_pressed
+signal pack_research_pressed
+signal packing_pressed
+signal packing_start_pressed
+signal order_deliver_packed_pressed
+signal assign_packing_requested(worker_id: String)
+signal world_map_pressed
 signal priority_requested(recipe_id: String)
 
 var name_label: Label
@@ -38,15 +44,27 @@ var order_deliver: Button
 var order_deliver_cord: Button
 var crew_button: Button
 var research_button: Button
+var pack_research_button: Button
+var world_map_button: Button
+var packing_button: Button
 var priority_bundle: Button
 var priority_cord: Button
 var crew_panel: PanelContainer
+var packing_panel: PanelContainer
+var packing_body: Label
+var packing_start: Button
+var order_deliver_packed: Button
+var world_map_panel: PanelContainer
+var world_map_body: Label
 var workshop_open := false
 var orders_open := false
 var crew_open := false
+var packing_open := false
+var world_map_open := false
 var _crew_labels := {}
 var _hire_buttons := {}
 var _assign_buttons := {}
+var _assign_packing_buttons := {}
 
 
 func _ready() -> void:
@@ -139,6 +157,14 @@ func _ready() -> void:
 	research_button = _action(column, "ResearchButton", "Buy loom rule")
 	research_button.visible = false
 	research_button.pressed.connect(func() -> void: research_pressed.emit())
+	pack_research_button = _action(column, "PackResearchButton", "Buy packing line")
+	pack_research_button.visible = false
+	pack_research_button.pressed.connect(func() -> void: pack_research_pressed.emit())
+	world_map_button = _action(column, "WorldMapButton", "World map")
+	world_map_button.pressed.connect(func() -> void: _set_world_map_open(not world_map_open))
+	packing_button = _action(column, "PackingButton", "Packing bench")
+	packing_button.visible = false
+	packing_button.pressed.connect(func() -> void: packing_pressed.emit())
 
 	workshop_panel = _card(root, "WorkshopPanel", Vector2(430, 150))
 	var workshop_title := _card_title(workshop_panel, "WorkshopTitle", "Textile workshop")
@@ -174,10 +200,15 @@ func _ready() -> void:
 	order_deliver.pressed.connect(func() -> void: order_deliver_pressed.emit())
 	order_deliver_cord = _action(order_row, "OrderDeliverCord", "Deliver cord")
 	order_deliver_cord.pressed.connect(func() -> void: order_deliver_cord_pressed.emit())
+	order_deliver_packed = _action(order_row, "OrderDeliverPacked", "Deliver packed textile")
+	order_deliver_packed.visible = false
+	order_deliver_packed.pressed.connect(func() -> void: order_deliver_packed_pressed.emit())
 	var order_close := _action(order_row, "OrderClose", "Close")
 	order_close.pressed.connect(func() -> void: _set_orders_open(false))
 
 	_build_crew(root)
+	_build_packing(root)
+	_build_world_map(root)
 
 	var hint := _shadow_label("Hint")
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
@@ -228,12 +259,22 @@ func refresh(game: SaveGame, loop: FarmLoop, barn_selected: bool) -> void:
 	crew_button.visible = step >= TutorialTrack.DONE
 	_style_button(crew_button, step >= TutorialTrack.DONE and loop.roster.workshop_worker_id == "")
 	var rule_owned := loop.research.owns("loom_rule")
+	var pack_owned := loop.research.owns("pack_line")
 	research_button.visible = step >= TutorialTrack.DONE and not rule_owned
 	if research_button.visible:
 		var rule_cost := int(ResourceCatalog.research("loom_rule")["cost"])
 		research_button.text = "Buy loom rule (%d)" % rule_cost
 	_style_button(research_button, research_button.visible)
+	pack_research_button.visible = step >= TutorialTrack.DONE and not pack_owned
+	if pack_research_button.visible:
+		var pack_cost := int(ResourceCatalog.research("pack_line")["cost"])
+		pack_research_button.text = "Buy packing line (%d)" % pack_cost
+	_style_button(pack_research_button, pack_research_button.visible)
+	packing_button.visible = pack_owned
+	_style_button(packing_button, packing_open)
 	_fill_crew(loop)
+	_fill_packing(loop)
+	_fill_world_map(game)
 	barn_label.visible = barn_selected
 	if barn_selected:
 		if loop.upgrades.owns("barn_loft"):
@@ -246,6 +287,8 @@ func refresh(game: SaveGame, loop: FarmLoop, barn_selected: bool) -> void:
 	workshop_panel.visible = workshop_open
 	order_panel.visible = orders_open
 	crew_panel.visible = crew_open
+	packing_panel.visible = packing_open
+	world_map_panel.visible = world_map_open
 
 
 func set_marker_available(has_marker: bool) -> void:
@@ -275,6 +318,8 @@ func _set_workshop_open(open: bool) -> void:
 		orders_open = false
 		order_panel.visible = false
 		_close_crew()
+		_close_packing()
+		_close_world_map()
 
 
 func _set_orders_open(open: bool) -> void:
@@ -284,6 +329,8 @@ func _set_orders_open(open: bool) -> void:
 		workshop_open = false
 		workshop_panel.visible = false
 		_close_crew()
+		_close_packing()
+		_close_world_map()
 
 
 func _fill_workshop(loop: FarmLoop) -> void:
@@ -307,6 +354,7 @@ func _fill_workshop(loop: FarmLoop) -> void:
 		line += "\nWhen the plot is ready, the assigned worker starts that good."
 	else:
 		line += "\nThe loom rule is locked. Start the job by hand."
+		line += "\nResearch is a fork: loom rule, or the packing line."
 	if loop.workshop.is_busy():
 		line += "\nRunning. %d ticks left." % loop.workshop.ticks_remaining
 	else:
@@ -327,6 +375,8 @@ func _fill_order(loop: FarmLoop) -> void:
 	lines.append("One harvest of Verdant Fiber covers one of these goods.")
 	for spec in ResourceCatalog.orders():
 		var order_id := str(spec["id"])
+		if order_id == "packed_crate" and not loop.research.owns("pack_line"):
+			continue
 		var state := str(loop.orders.status.get(order_id, "open"))
 		var requires: Array = spec["requires"]
 		var need_id := str(requires[0]["id"])
@@ -344,6 +394,9 @@ func _fill_order(loop: FarmLoop) -> void:
 	order_body.text = "\n\n".join(lines)
 	order_deliver.disabled = not _order_ready(loop, "intro_bundle")
 	order_deliver_cord.disabled = not _order_ready(loop, "lane_cord")
+	var pack_owned := loop.research.owns("pack_line")
+	order_deliver_packed.visible = pack_owned
+	order_deliver_packed.disabled = not pack_owned or not _order_ready(loop, "packed_crate")
 
 
 func _order_ready(loop: FarmLoop, order_id: String) -> bool:
@@ -388,7 +441,7 @@ func _build_crew(root: Control) -> void:
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", 15)
 	intro.add_theme_color_override("font_color", Color(0.23, 0.16, 0.1))
-	intro.text = "Six ratings, each from 1 to 10. A higher total finishes a Fiber Bundle sooner. Listed wages are not charged."
+	intro.text = "Six ratings, each from 1 to 10. A higher total finishes a Fiber Bundle sooner. Wages are charged every %d ticks after Mara's lesson. The first finished job grants one experience point." % StaffRoster.WAGE_INTERVAL
 	crew_panel.get_node("Box").add_child(intro)
 	for person in StaffCatalog.workers():
 		var worker_id := str(person["id"])
@@ -409,8 +462,120 @@ func _build_crew(root: Control) -> void:
 		var assign := _action(row, "Assign_%s" % worker_id, "Assign to workshop")
 		_wire_assign(assign, worker_id)
 		_assign_buttons[worker_id] = assign
+		var pack_assign := _action(row, "AssignPack_%s" % worker_id, "Assign to packing")
+		pack_assign.pressed.connect(func() -> void: assign_packing_requested.emit(worker_id))
+		_assign_packing_buttons[worker_id] = pack_assign
 	var close := _action(crew_panel.get_node("Box"), "CrewClose", "Close")
 	close.pressed.connect(func() -> void: _set_crew_open(false))
+
+
+func _build_packing(root: Control) -> void:
+	packing_panel = _card(root, "PackingPanel", Vector2(430, 150))
+	_card_title(packing_panel, "PackingTitle", "Packing bench")
+	packing_body = _card_body(packing_panel, "PackingBody")
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	packing_panel.get_node("Box").add_child(row)
+	packing_start = _action(row, "PackingStart", "Wrap bundle")
+	packing_start.pressed.connect(func() -> void: packing_start_pressed.emit())
+	var close := _action(row, "PackingClose", "Close")
+	close.pressed.connect(func() -> void: _set_packing_open(false))
+
+
+func _build_world_map(root: Control) -> void:
+	world_map_panel = _card(root, "WorldMapPanel", Vector2(280, 120))
+	world_map_panel.custom_minimum_size = Vector2(520, 0)
+	_card_title(world_map_panel, "WorldMapTitle", "World map")
+	world_map_body = _card_body(world_map_panel, "WorldMapBody")
+	world_map_body.custom_minimum_size = Vector2(480, 0)
+	var close := _action(world_map_panel.get_node("Box"), "WorldMapClose", "Close")
+	close.pressed.connect(func() -> void: _set_world_map_open(false))
+
+
+func _fill_packing(loop: FarmLoop) -> void:
+	if packing_body == null:
+		return
+	var pace := loop.packing_ticks()
+	var line := "Input: 1 Fiber Bundle from the workshop.\nOutput: 1 Packed Textile in %d ticks." % pace
+	var person := loop.roster.packing_worker()
+	if person.is_empty():
+		line += "\nNobody is assigned. The bench uses the catalog pace."
+	else:
+		line += "\n%s walks to this bench." % str(person["name"])
+	if loop.packer.is_busy():
+		line += "\nRunning. %d ticks left." % loop.packer.ticks_remaining
+	else:
+		line += "\nIdle."
+	packing_body.text = line
+	packing_start.disabled = loop.packer.is_busy() or not loop.research.owns("pack_line")
+
+
+func _fill_world_map(game: SaveGame) -> void:
+	if world_map_body == null:
+		return
+	var blocks: PackedStringArray = PackedStringArray()
+	blocks.append("Four starting regions. This farm is marked. The numbers are gameplay tuning.")
+	for region in RegionCatalog.all():
+		var marker := " "
+		if str(region["id"]) == game.region_id:
+			marker = "Current farm. "
+		blocks.append("%s%s\n%s" % [marker, str(region["display_name"]), RegionCatalog.detail_text(region)])
+	world_map_body.text = "\n\n".join(blocks)
+
+
+func open_packing(open: bool) -> void:
+	_set_packing_open(open)
+
+
+func _set_packing_open(open: bool) -> void:
+	packing_open = open
+	if packing_panel != null:
+		packing_panel.visible = open
+	if open:
+		workshop_open = false
+		orders_open = false
+		crew_open = false
+		world_map_open = false
+		if workshop_panel != null:
+			workshop_panel.visible = false
+		if order_panel != null:
+			order_panel.visible = false
+		if crew_panel != null:
+			crew_panel.visible = false
+		if world_map_panel != null:
+			world_map_panel.visible = false
+
+
+func _set_world_map_open(open: bool) -> void:
+	world_map_open = open
+	if world_map_panel != null:
+		world_map_panel.visible = open
+	if open:
+		workshop_open = false
+		orders_open = false
+		crew_open = false
+		packing_open = false
+		if workshop_panel != null:
+			workshop_panel.visible = false
+		if order_panel != null:
+			order_panel.visible = false
+		if crew_panel != null:
+			crew_panel.visible = false
+		if packing_panel != null:
+			packing_panel.visible = false
+	world_map_pressed.emit()
+
+
+func _close_packing() -> void:
+	packing_open = false
+	if packing_panel != null:
+		packing_panel.visible = false
+
+
+func _close_world_map() -> void:
+	world_map_open = false
+	if world_map_panel != null:
+		world_map_panel.visible = false
 
 
 func _wire_hire(button: Button, worker_id: String) -> void:
@@ -422,29 +587,39 @@ func _wire_assign(button: Button, worker_id: String) -> void:
 
 
 func _fill_crew(loop: FarmLoop) -> void:
-	for person in StaffCatalog.workers():
-		var worker_id := str(person["id"])
+	var pack_owned := loop.research.owns("pack_line")
+	for entry in StaffCatalog.workers():
+		var worker_id := str(entry["id"])
+		var person := loop.roster.presented(worker_id)
 		var hired := loop.roster.hired.has(worker_id)
 		var assigned := loop.roster.workshop_worker_id == worker_id
+		var packing := loop.roster.packing_worker_id == worker_id
 		var label := _crew_labels[worker_id] as Label
-		label.text = _crew_text(person, hired, assigned)
+		label.text = _crew_text(person, hired, assigned, packing, int(loop.roster.experience.get(worker_id, 0)))
 		(_hire_buttons[worker_id] as Button).visible = not hired
 		(_assign_buttons[worker_id] as Button).visible = hired and not assigned
+		(_assign_packing_buttons[worker_id] as Button).visible = hired and pack_owned and not packing
 
 
-func _crew_text(person: Dictionary, hired: bool, assigned: bool) -> String:
+func _crew_text(person: Dictionary, hired: bool, assigned: bool, packing: bool, gained: int) -> String:
 	var lines := StaffCatalog.attribute_lines(person)
 	var ticks := WorkerPace.bundle_ticks(person)
 	var status := "Not hired."
-	if assigned:
+	if assigned and packing:
+		status = "At the workshop and the packing bench."
+	elif assigned:
 		status = "At the workshop."
+	elif packing:
+		status = "Walking to the packing bench."
 	elif hired:
 		status = "Hired. Not assigned."
+	if gained > 0:
+		status += " Experience 1."
 	var trait_bits: PackedStringArray = PackedStringArray()
 	var raw_traits: Array = person["traits"]
 	for bit in raw_traits:
 		trait_bits.append(str(bit))
-	return "%s — %s\n%s\n%s\n%s\nTotal %d · bundle %d ticks · wage %d listed\n%s" % [
+	return "%s — %s\n%s\n%s\n%s\nTotal %d · bundle %d ticks · wage %d every %d ticks\n%s" % [
 		str(person["name"]),
 		str(person["role"]),
 		str(person["background"]),
@@ -453,6 +628,7 @@ func _crew_text(person: Dictionary, hired: bool, assigned: bool) -> String:
 		StaffCatalog.attribute_total(person),
 		ticks,
 		int(person["wage"]),
+		StaffRoster.WAGE_INTERVAL,
 		status + " " + ", ".join(trait_bits),
 	]
 
@@ -468,6 +644,8 @@ func _set_crew_open(open: bool) -> void:
 			workshop_panel.visible = false
 		if order_panel != null:
 			order_panel.visible = false
+		_close_packing()
+		_close_world_map()
 
 
 func _close_crew() -> void:

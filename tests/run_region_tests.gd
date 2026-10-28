@@ -52,6 +52,8 @@ func _four_regions() -> String:
 			"starting_funds",
 			"map_x",
 			"map_y",
+			"economy_profile",
+			"play_style",
 		]:
 			if not region.has(field):
 				return "missing field %s" % field

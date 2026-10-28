@@ -13,12 +13,15 @@ var upgrades: UpgradeShop
 var tutorial: TutorialTrack
 var roster: StaffRoster
 var research: ResearchBoard
+var packer: Workshop
 var last_event := ""
+var sound_cue := ""
 
 
 func _init() -> void:
 	inventory = FarmInventory.new()
 	workshop = Workshop.new(inventory)
+	packer = Workshop.new(inventory)
 	clock = SimClock.new()
 	stepper = SimStepper.new(clock, workshop)
 	plot = CropPlot.new()
@@ -34,6 +37,7 @@ func read_from(game: SaveGame) -> String:
 	if not game.read_inventory_into(inventory):
 		return "bad_inventory"
 	game.read_workshop_into(workshop)
+	packer.import_job(game.packer)
 	plot.import_state(game.plot)
 	orders.import_state(game.orders)
 	upgrades.import_state(game.upgrades)
@@ -46,6 +50,7 @@ func read_from(game: SaveGame) -> String:
 func write_to(game: SaveGame) -> void:
 	game.write_inventory_from(inventory)
 	game.write_workshop_from(workshop)
+	game.packer = packer.export_job()
 	game.plot = plot.export_state()
 	game.orders = orders.export_state()
 	game.upgrades = upgrades.export_state()
@@ -55,8 +60,13 @@ func write_to(game: SaveGame) -> void:
 
 
 func advance(delta_seconds: float) -> void:
+	var before := clock.tick_index
 	var was_ready := plot.is_ready()
 	var produced := stepper.step(delta_seconds)
+	var ticks := clock.tick_index - before
+	var packed := {}
+	if ticks > 0:
+		packed = packer.tick(ticks)
 	if not was_ready and plot.is_ready():
 		tutorial.notify("ready")
 		last_event = "The fiber plot is ready."
@@ -70,7 +80,44 @@ func advance(delta_seconds: float) -> void:
 			last_event = "The workshop finished a %s." % label
 		else:
 			last_event = "The workshop finished."
+		_note_experience(roster.workshop_worker_id)
+	if not packed.is_empty():
+		last_event = "The packing bench finished a Packed Textile."
+		_note_experience(roster.packing_worker_id)
 	apply_loom_rule()
+
+
+## Wages are not taken at hire. After the lesson, every 10 ticks charge the hired wages.
+func charge_wages(game: SaveGame, ticks: int) -> int:
+	if ticks <= 0 or tutorial.step < TutorialTrack.DONE or roster.hired.is_empty():
+		return 0
+	roster.wage_progress += ticks
+	var due := 0
+	while roster.wage_progress >= StaffRoster.WAGE_INTERVAL:
+		roster.wage_progress -= StaffRoster.WAGE_INTERVAL
+		for worker_id in roster.hired:
+			due += int(StaffCatalog.worker(worker_id)["wage"])
+	if due <= 0:
+		return 0
+	var paid := mini(due, game.funds)
+	game.funds -= paid
+	if paid < due:
+		last_event = "Wages short. Charged %d." % paid
+	else:
+		last_event = "Wages charged %d." % paid
+	return paid
+
+
+func _note_experience(worker_id: String) -> void:
+	if tutorial.step < TutorialTrack.DONE:
+		return
+	if not roster.grant_experience(worker_id):
+		return
+	var person := StaffCatalog.worker(worker_id)
+	var display_name := worker_id
+	if not person.is_empty():
+		display_name = str(person["name"])
+	last_event = "%s %s gained experience." % [last_event, display_name]
 
 
 func plant_if_needed() -> String:
@@ -108,6 +155,7 @@ func harvest() -> String:
 		label,
 	]
 	tutorial.notify("harvested")
+	sound_cue = "harvest"
 	return ""
 
 
@@ -152,6 +200,7 @@ func _start_recipe(recipe_id: String) -> String:
 		if recipe_id == "bundle_fiber":
 			tutorial.notify("started")
 		last_event = "Workshop started. %d ticks until a %s." % [pace, output_label]
+		sound_cue = "loom"
 		return ""
 	if err == "missing_inputs":
 		last_event = "Need more inputs for a %s." % output_label
@@ -198,6 +247,7 @@ func _fulfill_order(order_id: String, game: SaveGame, advances_tutorial: bool) -
 	if advances_tutorial:
 		tutorial.notify("sold")
 	last_event = "Order paid %d." % int(spec["reward_funds"])
+	sound_cue = "delivery"
 	return ""
 
 
@@ -335,6 +385,75 @@ func _priority_label(recipe_id: String) -> String:
 	return str(ResourceCatalog.resources()[output_id]["label"])
 
 
+func buy_pack_line(game: SaveGame) -> String:
+	if tutorial.step < TutorialTrack.DONE:
+		last_event = "Follow Mara's step before buying the packing line."
+		return "tutorial"
+	var before := game.funds
+	var result := research.try_purchase("pack_line", game.funds)
+	var err := str(result["error"])
+	if err != "":
+		if err == "short_funds":
+			last_event = "Not enough funds for the packing line."
+		elif err == "already_owned":
+			last_event = "The packing line is already unlocked."
+		else:
+			last_event = err
+		return err
+	game.funds = int(result["funds"])
+	var spec := ResourceCatalog.research("pack_line")
+	last_event = "Packing line unlocked for %d. Funds %d." % [int(spec["cost"]), game.funds]
+	if game.funds != before - int(spec["cost"]):
+		last_event = "Packing line unlocked for %d." % int(spec["cost"])
+	return ""
+
+
+func packing_ticks() -> int:
+	return WorkerPace.job_ticks("wrap_bundle", roster.packing_worker(), 0)
+
+
+func start_wrap() -> String:
+	if tutorial.step < TutorialTrack.DONE:
+		last_event = "Finish Mara's lesson before the packing bench."
+		return "tutorial"
+	if not research.owns("pack_line"):
+		last_event = "Buy the packing line before wrapping a bundle."
+		return "locked"
+	var recipe := ResourceCatalog.recipe("wrap_bundle")
+	var grades := {}
+	for input in recipe["inputs"]:
+		var resource_id := str(input["id"])
+		var amount := int(input["amount"])
+		var grade := inventory.lowest_grade_with(resource_id, amount)
+		if grade == 0:
+			var label := str(ResourceCatalog.resources()[resource_id]["label"])
+			last_event = "Need %d %s from the workshop." % [amount, label]
+			return "missing_inputs"
+		grades[resource_id] = grade
+	var pace := packing_ticks()
+	var err := packer.try_start("wrap_bundle", grades, pace)
+	if err == "":
+		last_event = "Packing bench started. %d ticks until a Packed Textile." % pace
+		return ""
+	if err == "missing_inputs":
+		last_event = "Need a Fiber Bundle from the workshop."
+	elif err == "busy":
+		last_event = "The packing bench is already running."
+	else:
+		last_event = err
+	return err
+
+
+func fulfill_packed(game: SaveGame) -> String:
+	if tutorial.step < TutorialTrack.DONE:
+		last_event = "Follow Mara's step before delivering the crate."
+		return "tutorial"
+	if not research.owns("pack_line"):
+		last_event = "Buy the packing line before that order."
+		return "locked"
+	return _fulfill_order("packed_crate", game, false)
+
+
 func hire_worker(worker_id: String) -> String:
 	var err := roster.hire(worker_id)
 	if err == "":
@@ -353,6 +472,19 @@ func assign_workshop(worker_id: String) -> String:
 		var person := StaffCatalog.worker(worker_id)
 		var pace := WorkerPace.bundle_ticks(person)
 		last_event = "%s is at the workshop. A bundle takes %d ticks." % [str(person["name"]), pace]
+	elif err == "not_hired":
+		last_event = "Hire them first."
+	else:
+		last_event = "No such candidate."
+	return err
+
+
+func assign_packing(worker_id: String) -> String:
+	var err := roster.assign_packing(worker_id)
+	if err == "":
+		var person := StaffCatalog.worker(worker_id)
+		var pace := WorkerPace.job_ticks("wrap_bundle", roster.packing_worker(), 0)
+		last_event = "%s walks to the packing bench. A wrap takes %d ticks." % [str(person["name"]), pace]
 	elif err == "not_hired":
 		last_event = "Hire them first."
 	else:

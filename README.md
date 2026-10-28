@@ -49,7 +49,15 @@ Controls in the farm scene:
 bash tools/validate.sh
 ```
 
-That imports the project headless, parses every gameplay script with `--check-only`, and runs the simulation, region, save, placement, economy, and scene checks. The same command is the GitHub Actions job in `.github/workflows/validate.yml`.
+That imports the project headless, parses every gameplay script with `--check-only`, and runs the simulation, region, save, placement, economy, staff, priority, automation, supply, and scene checks. The same command is the GitHub Actions job in `.github/workflows/validate.yml`.
+
+## Desktop export
+
+```bash
+bash tools/export_desktop.sh
+```
+
+That writes a Linux binary at `builds/linux/FinoFarm.x86_64`. The script downloads the official Godot 4.7.2 export templates when `linux_release.x86_64` is missing, checks the published checksum, and exports the `Linux` preset. `builds/` is gitignored. This is a desktop build. It is not an HTML5 export.
 
 Capture one frame when visuals change (needs a display; software GL is fine):
 
@@ -70,9 +78,10 @@ godot --path . --display-driver x11 --rendering-driver opengl3 \
 - [Testing strategy](docs/testing-strategy.md)
 - [Milestone 1 vertical slice](docs/vertical-slice-m1.md)
 - [Backlog](docs/backlog.md)
+- [Core loop](docs/flows/core-loop.md)
 
 ## Environment bootstrap
 
 `.cursor/install.sh` is the cloud-agent install. It pins Godot 4.7.2 standard (GDScript, not .NET), Blender 5.2.3, and Git LFS. Do not remove it. Large binary art (`glb`, `png`, `blend`, audio) is marked for Git LFS in `.gitattributes`. The glTF models are stored with Git LFS.
 
-The barn, the farmhand, the grove trees, the workshop shed, and the plot marker are in-engine models, not approved final art. Terrain, the fiber plot, the barn loft, and the shuttle rack are still placeholders. See the art bible before calling any of them finished art.
+The barn, the farmhand, the grove trees, the workshop shed, the plot marker, the packing bench, and the packing clerk are in-engine models, not approved final art. Terrain, the fiber plot, the barn loft, and the shuttle rack are still placeholders. Harvest, loom, and delivery sounds are generated tones. See the art bible before calling any of them finished art.

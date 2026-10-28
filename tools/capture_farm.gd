@@ -12,6 +12,7 @@ func _initialize() -> void:
 	var automation := false
 	var props := false
 	var terrain := false
+	var chain := false
 	for arg in OS.get_cmdline_user_args():
 		if str(arg).begins_with("--output="):
 			output = str(arg).trim_prefix("--output=")
@@ -29,6 +30,8 @@ func _initialize() -> void:
 			props = true
 		elif str(arg) == "--terrain":
 			terrain = true
+		elif str(arg) == "--chain":
+			chain = true
 	if menu:
 		var menu_scene: PackedScene = load("res://scenes/menu/main_menu.tscn")
 		if menu_scene == null:
@@ -58,6 +61,8 @@ func _initialize() -> void:
 		call_deferred("_capture_props", farm, output)
 	elif terrain:
 		call_deferred("_capture_terrain", farm, output)
+	elif chain:
+		call_deferred("_capture_chain", farm, output)
 	elif automation:
 		call_deferred("_capture_automation", farm, output)
 	elif priority:
@@ -396,6 +401,57 @@ func _capture(farm: Node, output: String) -> void:
 		anim.play("walk")
 		anim.seek(0.25, true)
 		anim.pause()
+	await _capture_view(output)
+
+
+func _capture_chain(farm: Node, output: String) -> void:
+	for _frame in 4:
+		await process_frame
+	var session := farm as FarmSession
+	session.set_process(false)
+	session.loop.tutorial.step = TutorialTrack.DONE
+	session.game.funds = 800
+	if session.buy_pack_line() != "" or session.buy_loom_rule() != "":
+		push_error("research")
+		quit(4)
+		return
+	if session.hire_worker("alex_morgan") != "" or session.assign_worker("alex_morgan") != "":
+		push_error("loom crew")
+		quit(4)
+		return
+	if session.hire_worker("bram_holt") != "" or session.assign_packing("bram_holt") != "":
+		push_error("packing crew")
+		quit(4)
+		return
+	session.loop.inventory.add("fiber_bundle", 1, GradeScale.COMMON)
+	if session.start_wrap() != "":
+		push_error(session.loop.last_event)
+		quit(4)
+		return
+	var clerk := session.packing_clerk
+	clerk.set_process(false)
+	while clerk.is_walking():
+		clerk.advance(0.2)
+	session.refresh_presentation()
+	if not session.packing_bench.visible or not clerk.visible:
+		push_error("chain hidden")
+		quit(4)
+		return
+	for panel_name in ["HudRoot/Hint", "HudRoot/TutorialPanel"]:
+		var panel := session.hud.get_node_or_null(panel_name) as CanvasItem
+		if panel != null:
+			panel.visible = false
+	var view := session.get_node("Stage/FarmCamera") as Camera3D
+	view.focus = Vector3(0.2, 1.2, 0.4)
+	view.yaw = 0.15
+	view.pitch = 0.62
+	view.distance = 24.0
+	view.orbit(0.0, 0.0)
+	session.workshop_rig.set_process(false)
+	session.packing_bench.set_process(false)
+	session.packing_bench.advance(0.4, true)
+	var walker = session.get_node("Stage/Farmhand")
+	walker.set_process(false)
 	await _capture_view(output)
 
 

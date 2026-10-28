@@ -20,6 +20,11 @@ var workshop: Dictionary = {
 	"ticks_remaining": 0,
 	"locked_grade": 0,
 }
+var packer: Dictionary = {
+	"recipe_id": "",
+	"ticks_remaining": 0,
+	"locked_grade": 0,
+}
 var camera: Dictionary = {
 	"focus": [0.0, 1.2, 0.0],
 	"yaw": 0.9,
@@ -78,6 +83,7 @@ func to_dict() -> Dictionary:
 		"last_saved_unix": last_saved_unix,
 		"inventory": inventory.duplicate(true),
 		"workshop": workshop.duplicate(true),
+		"packer": packer.duplicate(true),
 		"camera": camera.duplicate(true),
 		"tutorial_step": tutorial_step,
 		"marker": marker.duplicate(true),
@@ -115,6 +121,9 @@ static func from_dict(data: Dictionary) -> Dictionary:
 	var workshop_value := _workshop_from(data.get("workshop", {}))
 	if workshop_value.is_empty():
 		return _fail("bad_workshop")
+	var packer_value := _workshop_from(data.get("packer", {}))
+	if packer_value.is_empty():
+		return _fail("bad_packer")
 	var marker_value: Variant = _marker_from(data.get("marker", {}))
 	if marker_value == null:
 		return _fail("bad_marker")
@@ -144,6 +153,7 @@ static func from_dict(data: Dictionary) -> Dictionary:
 	game.last_saved_unix = int(data.get("last_saved_unix", 0))
 	game.inventory = stacks.snapshot()
 	game.workshop = workshop_value
+	game.packer = packer_value
 	game.camera = camera_value
 	game.tutorial_step = int(data.get("tutorial_step", 0))
 	game.marker = (marker_value as Dictionary).duplicate(true)
@@ -402,7 +412,45 @@ static func _staff_from(value: Variant) -> Variant:
 	var workshop := str(raw.get("workshop", ""))
 	if workshop != "" and not seen.has(workshop):
 		return null
-	return {"hired": hired, "workshop": workshop}
+	var packing := ""
+	if raw.has("packing"):
+		if typeof(raw["packing"]) != TYPE_STRING:
+			return null
+		packing = str(raw["packing"])
+		if packing != "" and not seen.has(packing):
+			return null
+	var wage_progress := 0
+	if raw.has("wage_progress"):
+		var progress_value: Variant = raw["wage_progress"]
+		if typeof(progress_value) != TYPE_INT and typeof(progress_value) != TYPE_FLOAT:
+			return null
+		wage_progress = int(progress_value)
+		if wage_progress < 0:
+			return null
+	var experience := {}
+	if raw.has("experience"):
+		if typeof(raw["experience"]) != TYPE_DICTIONARY:
+			return null
+		var raw_xp: Dictionary = raw["experience"]
+		for key in raw_xp.keys():
+			var worker_id := str(key)
+			if not seen.has(worker_id):
+				return null
+			var gained_value: Variant = raw_xp[key]
+			if typeof(gained_value) != TYPE_INT and typeof(gained_value) != TYPE_FLOAT:
+				return null
+			var gained := int(gained_value)
+			if gained < 0 or gained > 1:
+				return null
+			if gained > 0:
+				experience[worker_id] = gained
+	return {
+		"hired": hired,
+		"workshop": workshop,
+		"packing": packing,
+		"experience": experience,
+		"wage_progress": wage_progress,
+	}
 
 
 static func _fail(reason: String) -> Dictionary:

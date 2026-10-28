@@ -2,7 +2,7 @@
 
 Stub. Add a row before a new source file is used in a scene. Status `placeholder` means it is not final art, even if it is on screen.
 
-No third-party model, texture, audio, or font is imported. The barn, the farmhand, the grove trees, the workshop shed, the loom beam, the shuttle, the plot marker, and the valley ground were generated in Blender for this project. The selection ring, the fiber plot, the barn loft, and the shuttle rack are still engine primitives. The new meshes are a first stylized pass. `in-engine` is not art-director acceptance.
+No third-party model, texture, audio, or font is imported. The barn, the farmhand, the grove trees, the workshop shed, the loom beam, the shuttle, the plot marker, the valley ground, the packing bench, the packing crate, and the packing clerk were generated in Blender for this project. The harvest, loom, and delivery waves were generated as sine tones by `tools/generate_tones.py`. The selection ring, the fiber plot, the barn loft, and the shuttle rack are still engine primitives. The new meshes are a first stylized pass. `in-engine` is not art-director acceptance. The tones are not final audio.
 
 | Id | Scene node | Source | Export | Author | License | Materials | Polys | Animation | Scenes | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -17,6 +17,12 @@ No third-party model, texture, audio, or font is imported. The barn, the farmhan
 | `prop.loom_shuttle.v1` | `Shuttle` | `tools/blender/workshop.py` | `assets/models/loom_shuttle.glb` | Blender script in this repo | original, project-authored | flat principled colors, no textures | 324 tris | scripted slide while the job is busy | `scenes/buildings/placeholder_workshop.tscn` | in-engine |
 | `loft.placeholder` | `PlaceholderBarnLoft` | boxes in `scenes/buildings/placeholder_loft.tscn` | n/a | in-engine primitives | project original | flat colors | primitive | none | `first_farm.tscn` | placeholder |
 | `shuttle.placeholder` | `PlaceholderShuttleRack` | boxes in `scenes/buildings/placeholder_shuttle_rack.tscn` | n/a | in-engine primitives | project original | flat colors | primitive | none | `first_farm.tscn` | placeholder |
+| `building.packing_bench.v1` | `PackingBench` | `tools/blender/packing_bench.py` | `assets/models/packing_bench.glb` | Blender script in this repo | original, project-authored | flat principled colors, no textures | 216 tris | none on the bench | `scenes/buildings/packing_bench.tscn` | in-engine |
+| `prop.packing_crate.v1` | `PackingCrate` | `tools/blender/packing_bench.py` | `assets/models/packing_crate.glb` | Blender script in this repo | original, project-authored | flat principled colors, no textures | 56 tris | scripted bob while the job is busy | `scenes/buildings/packing_bench.tscn` | in-engine |
+| `character.packing_clerk.v1` | `PackingClerk` | `tools/blender/packing_clerk.py` | `assets/models/packing_clerk.glb` | Blender script in this repo | original, project-authored | flat principled colors, no textures | 9836 tris | skeleton `Armature`, clips `idle`, `walk`, and `work`, in-place | `scenes/characters/packing_clerk.tscn` | in-engine |
+| `audio.harvest_tone.v1` | `CuePlayer` | `tools/generate_tones.py` | `assets/audio/harvest_tone.wav` | generated sine, labeled | project original | n/a | n/a | 0.42s tone | `scripts/farm/farm_session.gd` | generated tone |
+| `audio.loom_tone.v1` | `CuePlayer` | `tools/generate_tones.py` | `assets/audio/loom_tone.wav` | generated sine, labeled | project original | n/a | n/a | 0.28s tone | `scripts/farm/farm_session.gd` | generated tone |
+| `audio.delivery_tone.v1` | `CuePlayer` | `tools/generate_tones.py` | `assets/audio/delivery_tone.wav` | generated sine, labeled | project original | n/a | n/a | 0.48s tone | `scripts/farm/farm_session.gd` | generated tone |
 | `icon.game` | project icon | `icon.svg` | svg | in-repo vector | project original | flat fills | n/a | none | project settings | block-out icon, not marketing art |
 
 External source URL for every glTF file: none. The box barn, the sine-wave walker, the cylinder trees, the box shed, the box flag, and the flat terrain shader are no longer instanced. `in-engine` means Godot imports the glTF and a scene instances it. It does not mean art-director acceptance. Commercial use of the project-authored meshes is allowed because this project made them.

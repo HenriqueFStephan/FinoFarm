@@ -1,6 +1,6 @@
 # FinoFarm art bible
 
-Status: cozy stylized direction. The barn, the farmhand, the grove trees, the workshop shed, the plot marker, and the valley ground are in-engine models. They are a first stylized pass, not approved final art. The fiber plot, the selection ring, the barn loft, and the shuttle rack are still placeholders. The person at the loom is a second instance of the farmhand mesh, not a new character.
+Status: cozy stylized direction. The barn, the farmhand, the grove trees, the workshop shed, the plot marker, the valley ground, the packing bench, the packing crate, and the packing clerk are in-engine models. They are a first stylized pass, not approved final art. The fiber plot, the selection ring, the barn loft, and the shuttle rack are still placeholders. The person at the loom is a second instance of the farmhand mesh, not a new character. The packing clerk is a different mesh. Harvest, loom, and delivery sounds are generated sine tones, not recorded sound design.
 
 ## Target
 
@@ -49,8 +49,12 @@ Interface surfaces, when UI arrives, use warm cream panels (`#F3E6C8` range) and
 | `PlaceholderWorkshop` | Shed glTF from `tools/blender/workshop.py`, plus a separate beam and shuttle. The beam spins only while the workshop job is busy. | in-engine, first stylized pass |
 | `PlaceholderBarnLoft` | A box room, a box roof, and a teal window, shown after the loft is bought. | placeholder |
 | `PlaceholderShuttleRack` | A wood rail and two amber boxes on the shed roof, shown after the shuttle rack is bought. | placeholder |
+| `PackingBench` | glTF from `tools/blender/packing_bench.py`. A wide counter, wood legs, and a teal awning. Shown after the packing line is bought. | in-engine, first stylized pass |
+| `PackingCrate` | A separate crate glTF from the same script. It bobs while the bench job is busy. | in-engine, first stylized pass |
+| `PackingClerk` | glTF from `tools/blender/packing_clerk.py`. Shorter figure, cap, teal vest, cream apron, brown trousers, crate in front. `idle`, `walk`, and `work`. Not a recolor of the farmhand. | in-engine, first stylized pass |
+| `CuePlayer` | `harvest_tone.wav`, `loom_tone.wav`, `delivery_tone.wav` from `tools/generate_tones.py`. Short labeled sine tones. | generated tones, not final audio |
 
-Do not describe the ring, crop, loft, or shuttle rack as finished art. Do not describe the barn, the farmhand, the grove trees, the workshop shed, the plot marker, the valley ground, or the workshop worker as approved final assets. The trees, the shed, the marker, and the ground are the first stylized pass. The worker is the farmhand mesh again, not a portrait of Alex or Bram. `work` is an in-place arm pass while the loom job is busy. Carry, celebrate, and rest clips are not in this build. The old box walker and its sine-wave swing are gone. The old cylinder trees, box shed, and box flag are gone. The old flat terrain plane and its edge shader are gone. The loom spin is a presentation of the busy flag, not a finished machine animation.
+Do not describe the ring, crop, loft, or shuttle rack as finished art. Do not describe the barn, the farmhand, the grove trees, the workshop shed, the plot marker, the valley ground, the workshop worker, the packing bench, the crate, or the packing clerk as approved final assets. The trees, the shed, the marker, the ground, the bench, the crate, and the clerk are a first stylized pass. The loom worker is the farmhand mesh again, not a portrait of Alex or Bram. `work` is an in-place arm pass while a job is busy. Carry, celebrate, and rest clips are not in this build. The tones are generated sines. The old box walker and its sine-wave swing are gone. The old cylinder trees, box shed, and box flag are gone. The old flat terrain plane and its edge shader are gone. The loom spin and the crate bob are a presentation of the busy flag, not a finished machine animation.
 
 ## Camera readability
 

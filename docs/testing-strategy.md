@@ -89,6 +89,17 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 - Alex's automatic bundle still finishes before Bram's. One automatic harvest still cannot pay both orders.
 - A schema-1 file with no `research` key loads locked. Schema stays `1`.
 
+## What the supply tests cover
+
+`tests/run_supply_tests.gd` does not load the farm scene. It is wired into `tools/validate.sh` after the automation suite.
+
+- `loom_rule` and `pack_line` are independent. Buying one leaves the other locked.
+- `wrap_bundle` consumes one Fiber Bundle, the workshop's output. One harvest cannot skip the bench and still fill `packed_crate`.
+- Wages are charged every 10 ticks after the lesson. Hire does not charge. Funds stay at or above zero.
+- One finished job raises Bram's Efficiency by 1 and shortens the next bundle. A second finish does not add another point.
+- Every region has `play_style` and `economy_profile`.
+- A schema-1 file that omits `packer` still loads. Schema stays `1`.
+
 ## What the scene checks cover
 
 `tests/run_scene_checks.gd` loads scenes after the tree is up (`call_deferred`, because `_initialize` runs too early).
@@ -105,6 +116,8 @@ Exit code is the Godot exit code. `set -e` stops on the first failure.
 - `play_intro_cycle` on that farm changes funds by `+180 - 400`, shows the loft, and leaves the order delivered.
 - Crew is hidden on the opening step. After the lesson, hiring Alex and assigning them shows `WorkshopWorker`, and starting the loom plays `work`.
 - `ResearchButton` is hidden during the lesson. After the lesson it is shown, the purchase hides it, and the priority buttons appear. Setting a cord priority does not replace the bundle already on the loom.
+- The menu detail text includes Play style and Economy.
+- `CuePlayer` has the three generated tones. `PackingBench` starts hidden. After the packing line is bought, hiring Bram and assigning packing shows `PackingClerk`. Its glTF is not the farmhand. `advance(1)` moves it about `1.7` units with `walk` playing.
 
 `tests/run_region_tests.gd`, `tests/run_save_load_tests.gd`, and `tests/run_placement_tests.gd` do not instance a 3D scene. The save tests use a throwaway `user://` directory.
 
@@ -125,10 +138,10 @@ There is no image-diff harness yet. FF-8 is the first human or GPU review. Add p
 
 ## Not covered yet
 
-- Export templates and HTML5 (FF-7).
+- HTML5 export (FF-7). The Linux desktop script is `bash tools/export_desktop.sh`. A successful Linux binary is not a browser build.
 - Mouse-drag orbit in a window. The math is tested; a desktop pass should still drag once.
 - Performance numbers.
-- `tools/blender/export_probe.py` still only writes a throwaway cube to `/tmp`. The barn, farmhand, tree, workshop, and plot-marker generators are the project assets.
+- `tools/blender/export_probe.py` still only writes a throwaway cube to `/tmp`. The barn, farmhand, tree, workshop, plot-marker, packing-bench, and packing-clerk generators are the project assets.
 
 ## Definition of done
 

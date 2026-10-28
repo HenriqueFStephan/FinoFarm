@@ -130,6 +130,23 @@ No new GitHub issues. These rows are the claim. This slice is a first stylized p
 
 GitHub issues #2 through #14 stay the Milestone 0 and 1 issues. Milestone 6 does not add another issue for the same work.
 
+## Charter remainder
+
+No new GitHub issues. These rows are the claim. This slice is the rest of the charter as one playable pass. It does not replace Milestones 0–6 or the valley terrain.
+
+| Id | Issue | Title | Owner | Status | Depends on | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| FF-47 | — | World map shows four region tradeoffs | `bc-0e205dd6-2dfc-5aab-8ef3-33f2bcb31cae` | done | FF-16 | `tests/run_region_tests.gd` requires `economy_profile` and `play_style`. The menu and the farm world map print both. The map does not change `region_id`. |
+| FF-48 | — | Research fork: loom rule and packing line | `bc-0e205dd6-2dfc-5aab-8ef3-33f2bcb31cae` | done | FF-38 | `tests/run_supply_tests.gd` shows buying one does not grant the other. Costs stay 120 and 100. The packing line is refused during Mara's lesson. |
+| FF-49 | — | Wages charged on an interval | `bc-0e205dd6-2dfc-5aab-8ef3-33f2bcb31cae` | done | FF-28 | The same suite charges hired wages every 10 ticks after the lesson and does not charge on hire. Funds do not go below zero. |
+| FF-50 | — | One experience gain | `bc-0e205dd6-2dfc-5aab-8ef3-33f2bcb31cae` | done | FF-30 | The same suite raises Bram's Efficiency once and shortens the next bundle. A second finish does not add another point. |
+| FF-51 | — | Packing bench uses a Fiber Bundle | `bc-0e205dd6-2dfc-5aab-8ef3-33f2bcb31cae` | done | FF-23, FF-48 | `wrap_bundle` consumes one Fiber Bundle. One harvest cannot skip the bench. `packed_crate` pays 220 only after the unlock. |
+| FF-52 | — | Packing clerk walks to the bench | `bc-0e205dd6-2dfc-5aab-8ef3-33f2bcb31cae` | done | FF-19, FF-51 | The scene check requires a glTF that is not `farmhand.glb`, a `walk` clip, and about `1.7` units of movement on `advance(1)`. |
+| FF-53 | — | Generated tones for harvest, loom, and delivery | `bc-0e205dd6-2dfc-5aab-8ef3-33f2bcb31cae` | done | FF-24 | The scene check loads the three waves on `CuePlayer`. Each file is a generated sine from `tools/generate_tones.py`. |
+| FF-54 | — | Linux desktop export script | `bc-0e205dd6-2dfc-5aab-8ef3-33f2bcb31cae` | done | FF-3 | `bash tools/export_desktop.sh` writes `builds/linux/FinoFarm.x86_64`. The README names that command. HTML5 stays FF-7. |
+
+`bash tools/validate.sh` is the acceptance command for the set. It exits 0 with the supply suite at `7 passed, 0 failed` and `scene checks passed`.
+
 FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` unless they instance child scenes. Child scenes are the default.
 
 ## Environment
@@ -141,4 +158,5 @@ FF-18 and FF-19 are independent of the menu. They still share `first_farm.tscn` 
 | FF-8, FF-13, FF-18, FF-19 | Prefer a display. Headless import is necessary and not sufficient. |
 | FF-11, FF-12, FF-17 math, FF-21 through FF-42 rules | Cloud. Staff, economy, priority, and automation tests must not require rendering. The order-board and priority-control screenshots need a display. |
 | FF-43, FF-44, FF-45, FF-46 | Cloud with Blender and a display. The scene check does not need a GPU. The farm frame does. |
+| FF-47 through FF-54 | Cloud. Supply tests must not require rendering. The chain frame and the desktop export need Godot. The export needs the official Linux template. |
 | FF-9 | Human admin on GitHub. |
