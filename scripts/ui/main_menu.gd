@@ -97,20 +97,7 @@ func activate(farm_id: String) -> String:
 
 
 static func detail_text(region: Dictionary) -> String:
-	return "\n".join([
-		str(region["display_name"]),
-		"Climate: %s" % str(region["climate_label"]),
-		"Season amplitude: %s" % str(region["season_amplitude"]),
-		"Property cost: %d" % int(region["property_cost"]),
-		"Upkeep: x%s" % str(region["upkeep_modifier"]),
-		"Infrastructure: %s" % RegionCatalog.difficulty_label(float(region["infrastructure_difficulty"])),
-		"Starting funds: %d" % int(region["starting_funds"]),
-		"",
-		"Opportunity: %s" % str(region["opportunity"]),
-		"Challenge: %s" % str(region["challenge"]),
-		"",
-		"Gameplay tuning, not a geographic claim.",
-	])
+	return RegionCatalog.detail_text(region)
 
 
 func _build_home(root: Control) -> PanelContainer:
@@ -164,7 +151,7 @@ func _build_name(root: Control) -> PanelContainer:
 	name_edit.custom_minimum_size = Vector2(0, 44)
 	name_edit.text_changed.connect(func(_text: String) -> void: _refresh_name_next())
 	box.add_child(name_edit)
-	var next_button := _menu_button(box, "NameNext", "Choose region", show_map)
+	var next_button := _menu_button(box, "NameNext", "World map", show_map)
 	next_button.disabled = true
 	_menu_button(box, "NameBack", "Back", func() -> void: _show("home"))
 	return panel
@@ -173,13 +160,14 @@ func _build_name(root: Control) -> PanelContainer:
 func _build_map(root: Control) -> PanelContainer:
 	var panel := _panel(root, "Map", Vector2(48, 28), 980)
 	var box := _column(panel)
-	box.add_child(_heading("Choose a region"))
+	box.add_child(_heading("World map"))
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 18)
 	box.add_child(columns)
 	var pad := Control.new()
 	pad.name = "MapPad"
 	pad.custom_minimum_size = Vector2(460, 340)
+	pad.set_script(load("res://scripts/ui/world_map_pad.gd"))
 	columns.add_child(pad)
 	for region in RegionCatalog.all():
 		var button := Button.new()

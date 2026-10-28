@@ -24,7 +24,12 @@ var _barn_selected := false
 @onready var workshop_worker: WorkshopWorker = $WorkshopWorker
 @onready var loft: Node3D = $PlaceholderBarnLoft
 @onready var shuttle_rack: Node3D = $PlaceholderShuttleRack
+@onready var packing_bench: PackingRig = $PackingBench
+@onready var packing_clerk: PackingClerk = $PackingClerk
 @onready var hud: FarmHud = $Hud
+
+var _audio: AudioStreamPlayer
+var _streams := {}
 
 
 func _ready() -> void:
@@ -43,6 +48,14 @@ func _ready() -> void:
 			persist = false
 	if loop.read_from(game) != "":
 		push_error("farm loop could not read the save")
+	_audio = AudioStreamPlayer.new()
+	_audio.name = "CuePlayer"
+	add_child(_audio)
+	_streams = {
+		"harvest": load("res://assets/audio/harvest_tone.wav"),
+		"loom": load("res://assets/audio/loom_tone.wav"),
+		"delivery": load("res://assets/audio/delivery_tone.wav"),
+	}
 	_connect_hud()
 	_apply_game()
 
@@ -51,7 +64,9 @@ func _process(delta: float) -> void:
 	if game == null:
 		return
 	game.playtime_seconds += delta
+	var before := loop.clock.tick_index
 	loop.advance(delta)
+	loop.charge_wages(game, loop.clock.tick_index - before)
 	refresh_presentation()
 	if not persist:
 		return
@@ -173,6 +188,38 @@ func buy_loom_rule() -> String:
 	return err
 
 
+func buy_pack_line() -> String:
+	var err := loop.buy_pack_line(game)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func start_wrap() -> String:
+	var err := loop.start_wrap()
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func fulfill_packed() -> String:
+	var err := loop.fulfill_packed(game)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
+func assign_packing(worker_id: String) -> String:
+	var err := loop.assign_packing(worker_id)
+	refresh_presentation()
+	if err == "":
+		_write()
+	return err
+
+
 func set_loom_priority(recipe_id: String) -> String:
 	var err := loop.set_loom_priority(recipe_id)
 	refresh_presentation()
@@ -220,6 +267,9 @@ func refresh_presentation() -> void:
 	if workshop_rig != null:
 		workshop_rig.operating = loop.workshop.is_busy()
 	_sync_worker()
+	_sync_packing()
+	_sync_clerk()
+	_play_cue()
 	if hud != null and game != null:
 		hud.refresh(game, loop, _barn_selected)
 		hud.set_marker_available(grid.has_marker)
@@ -271,7 +321,18 @@ func _click(screen_position: Vector2) -> void:
 	if world.distance_to(WorkshopRig.WORLD_POSITION) <= WorkshopRig.SELECT_RADIUS:
 		_set_barn_selected(false)
 		_set_workshop_selected(true)
+		_set_packing_selected(false)
 		hud.open_workshop(true)
+		refresh_presentation()
+		return
+	if world.distance_to(PackingRig.WORLD_POSITION) <= PackingRig.SELECT_RADIUS:
+		_set_barn_selected(false)
+		_set_workshop_selected(false)
+		_set_packing_selected(true)
+		if loop.research.owns("pack_line"):
+			hud.open_packing(true)
+		else:
+			loop.last_event = "Buy the packing line to open this bench."
 		refresh_presentation()
 		return
 	if grid.has_marker and loop.plot.is_ready():
@@ -289,6 +350,9 @@ func _hover(screen_position: Vector2) -> void:
 		return
 	var world := point as Vector3
 	if world.distance_to(WorkshopRig.WORLD_POSITION) <= WorkshopRig.SELECT_RADIUS:
+		hover.visible = false
+		return
+	if world.distance_to(PackingRig.WORLD_POSITION) <= PackingRig.SELECT_RADIUS:
 		hover.visible = false
 		return
 	var cell := PlotGrid.snap_cell(world.x, world.z)
@@ -347,6 +411,43 @@ func _sync_worker() -> void:
 	workshop_worker.show_assignment(not person.is_empty(), loop.workshop.is_busy(), display_name)
 
 
+func _sync_packing() -> void:
+	if packing_bench == null:
+		return
+	packing_bench.visible = loop.research.owns("pack_line")
+	packing_bench.operating = loop.packer.is_busy() and packing_bench.visible
+
+
+func _sync_clerk() -> void:
+	if packing_clerk == null:
+		return
+	var person := loop.roster.packing_worker()
+	var display_name := ""
+	if not person.is_empty():
+		display_name = str(person["name"])
+	var present := loop.research.owns("pack_line") and not person.is_empty()
+	packing_clerk.show_assignment(present, loop.packer.is_busy(), display_name)
+
+
+func _set_packing_selected(selected: bool) -> void:
+	if packing_bench != null:
+		packing_bench.set_selected(selected)
+
+
+func _play_cue() -> void:
+	if loop.sound_cue == "":
+		return
+	var cue := loop.sound_cue
+	loop.sound_cue = ""
+	if _audio == null:
+		return
+	var stream: AudioStream = _streams.get(cue)
+	if stream == null:
+		return
+	_audio.stream = stream
+	_audio.play()
+
+
 func _sync_loft() -> void:
 	if loft != null:
 		loft.visible = loop.upgrades.owns("barn_loft")
@@ -399,6 +500,16 @@ func _connect_hud() -> void:
 		hud.assign_requested.connect(assign_worker)
 	if not hud.research_pressed.is_connected(buy_loom_rule):
 		hud.research_pressed.connect(buy_loom_rule)
+	if not hud.pack_research_pressed.is_connected(buy_pack_line):
+		hud.pack_research_pressed.connect(buy_pack_line)
+	if not hud.packing_pressed.is_connected(_on_packing_button):
+		hud.packing_pressed.connect(_on_packing_button)
+	if not hud.packing_start_pressed.is_connected(start_wrap):
+		hud.packing_start_pressed.connect(start_wrap)
+	if not hud.order_deliver_packed_pressed.is_connected(fulfill_packed):
+		hud.order_deliver_packed_pressed.connect(fulfill_packed)
+	if not hud.assign_packing_requested.is_connected(assign_packing):
+		hud.assign_packing_requested.connect(assign_packing)
 	if not hud.priority_requested.is_connected(set_loom_priority):
 		hud.priority_requested.connect(set_loom_priority)
 
@@ -427,3 +538,10 @@ func _on_upgrade_button() -> void:
 func _on_crew_button() -> void:
 	hud.open_crew(not hud.crew_open)
 	refresh_presentation()
+
+
+func _on_packing_button() -> void:
+	_set_packing_selected(true)
+	_set_workshop_selected(false)
+	_set_barn_selected(false)
+	hud.open_packing(not hud.packing_open)

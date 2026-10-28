@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/farm/farm_stage.tscn" id="1_stage"]
 [ext_resource type="Script" path="res://scripts/farm/farm_session.gd" id="2_play"]
@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" path="res://scenes/buildings/placeholder_loft.tscn" id="7_loft"]
 [ext_resource type="PackedScene" path="res://scenes/characters/workshop_worker.tscn" id="8_worker"]
 [ext_resource type="PackedScene" path="res://scenes/buildings/placeholder_shuttle_rack.tscn" id="9_rack"]
+[ext_resource type="PackedScene" path="res://scenes/buildings/packing_bench.tscn" id="10_pack"]
+[ext_resource type="PackedScene" path="res://scenes/characters/packing_clerk.tscn" id="11_clerk"]
 
 [sub_resource type="CylinderMesh" id="RingMesh"]
 top_radius = 2.35
@@ -52,6 +54,14 @@ transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, 2.65, 2.72, 1.45)
 
 [node name="PlaceholderShuttleRack" parent="." instance=ExtResource("9_rack")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.35, 1.48, 2.35)
+
+[node name="PackingBench" parent="." instance=ExtResource("10_pack")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4, 0, -2.2)
+visible = false
+
+[node name="PackingClerk" parent="." instance=ExtResource("11_clerk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.2, 0, 6.2)
+visible = false
 
 [node name="Hud" type="CanvasLayer" parent="."]
 script = ExtResource("3_hud")

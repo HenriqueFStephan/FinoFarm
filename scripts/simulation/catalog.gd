@@ -16,7 +16,7 @@ static func resources() -> Dictionary:
 
 static func recipes() -> Array:
 	var found: Array = []
-	for recipe_id in ["bundle_fiber", "twist_cord", "pack_textile"]:
+	for recipe_id in ["bundle_fiber", "twist_cord", "pack_textile", "wrap_bundle"]:
 		found.append(recipe(recipe_id))
 	return found
 
@@ -105,6 +105,13 @@ static func _orders() -> Array:
 			"requires": [{"id": "fiber_cord", "amount": 1}],
 			"reward_funds": 240,
 		},
+		{
+			"id": "packed_crate",
+			"label": "Crate counter",
+			"detail": "The counter pays for one Packed Textile from the packing bench.",
+			"requires": [{"id": "packed_textile", "amount": 1}],
+			"reward_funds": 220,
+		},
 	]
 
 
@@ -133,6 +140,14 @@ static func _research() -> Array:
 			"label": "Loom rule",
 			"detail": "When Verdant Fiber is ready and a worker is assigned, the loom starts the chosen good.",
 			"cost": 120,
+			"branch": "loom",
+		},
+		{
+			"id": "pack_line",
+			"label": "Packing line",
+			"detail": "Opens a bench that wraps one Fiber Bundle into a Packed Textile.",
+			"cost": 100,
+			"branch": "packing",
 		},
 	]
 
@@ -159,6 +174,13 @@ static func _definitions() -> Array:
 				{"id": "fiber_bundle", "amount": 1},
 				{"id": "seal_wax", "amount": 1},
 			],
+			"output_id": "packed_textile",
+			"output_amount": 1,
+			"duration_ticks": 3,
+		},
+		{
+			"id": "wrap_bundle",
+			"inputs": [{"id": "fiber_bundle", "amount": 1}],
 			"output_id": "packed_textile",
 			"output_amount": 1,
 			"duration_ticks": 3,

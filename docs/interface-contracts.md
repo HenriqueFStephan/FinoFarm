@@ -16,7 +16,7 @@ Scripts are `class_name` types under `scripts/simulation/`. They extend `RefCoun
 
 - `resources()` keys: `verdant_fiber`, `seal_wax`, `fiber_bundle`, `fiber_cord`, `packed_textile`.
 - `recipe(id)` returns a deep copy, or `{}` if unknown.
-- Recipes today: `bundle_fiber` (4 ticks, 2 Verdant Fiber → 1 Fiber Bundle), `twist_cord` (5 ticks, 2 Verdant Fiber → 1 Fiber Cord), `pack_textile` (3 ticks).
+- Recipes today: `bundle_fiber` (4 ticks, 2 Verdant Fiber → 1 Fiber Bundle), `twist_cord` (5 ticks, 2 Verdant Fiber → 1 Fiber Cord), `pack_textile` (3 ticks, Fiber Bundle + Seal Wax), `wrap_bundle` (3 ticks, 1 Fiber Bundle → 1 Packed Textile).
 - One plot harvest yields 2 Verdant Fiber, so it covers one of those two fiber recipes and not both.
 - Adding a recipe means editing the catalog and a test. Do not hard-code durations in UI code.
 
@@ -37,6 +37,7 @@ Scripts are `class_name` types under `scripts/simulation/`. They extend `RefCoun
 - Output grade is `GradeScale.minimum` of the consumed grades.
 - `try_start` takes an optional `duration_ticks`. Values below 1 keep the catalog duration. `FarmLoop` passes `WorkerPace.job_ticks` for that argument, including the shuttle-rack bonus when it is owned. The output amount stays the recipe amount.
 - `FarmLoop.apply_loom_rule` is the only caller that starts a recipe without a button. It does nothing unless the loom rule is owned, the tutorial is done, a worker is assigned, a priority is set, the plot is ready, and the loom is idle. It harvests that plot and then calls `try_start`. A busy loom returns `busy` and keeps its recipe and ticks.
+- `FarmLoop` owns a second `Workshop` named `packer`. It shares `FarmInventory`. `start_wrap` calls `packer.try_start("wrap_bundle")` only when `pack_line` is owned. `pack_textile` is not that call.
 
 ### `SimClock` and `SimStepper`
 
@@ -89,7 +90,7 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 
 ### `OrderBoard`
 
-- Two orders. `intro_bundle`: 1 `fiber_bundle`, reward `180`. `lane_cord`: 1 `fiber_cord`, reward `240`.
+- Three orders. `intro_bundle`: 1 `fiber_bundle`, reward `180`. `lane_cord`: 1 `fiber_cord`, reward `240`. `packed_crate`: 1 `packed_textile`, reward `220`. The HUD hides `packed_crate` until `pack_line` is owned.
 - `try_fulfill` spends the lowest grade that covers the amount.
 - Failure codes: `unknown_order`, `missing_goods`, `already_done`. Funds and inventory stay as they were.
 - Success returns the new fund total and sets status `done`. A second call does not pay again.
@@ -104,9 +105,9 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 
 ### `ResearchBoard`
 
-- One unlock: `loom_rule`, cost `120`. `try_purchase` failure codes: `unknown_research`, `short_funds`, `already_owned`. Funds stay put on failure.
-- `FarmLoop.buy_loom_rule` returns `tutorial` before step `done`. It does not require the loft.
-- Priorities are `bundle_fiber` and `twist_cord`. `pack_textile` is not a priority. `set_loom_priority` returns `tutorial`, `locked`, or `unknown_priority` without storing the rejected choice.
+- Two unlocks on different branches. `loom_rule` costs `120` (`branch` `loom`). `pack_line` costs `100` (`branch` `packing`). Buying one does not set the other. `try_purchase` failure codes: `unknown_research`, `short_funds`, `already_owned`. Funds stay put on failure.
+- `FarmLoop.buy_loom_rule` and `FarmLoop.buy_pack_line` return `tutorial` before step `done`. Neither requires the loft.
+- Priorities are `bundle_fiber` and `twist_cord`. `pack_textile` and `wrap_bundle` are not priorities. `set_loom_priority` returns `tutorial`, `locked`, or `unknown_priority` without storing the rejected choice.
 - `apply_loom_rule` returns `tutorial`, `locked`, `unassigned`, `no_priority`, `busy`, or `not_ready` without harvesting and without editing a running job. Success harvests the ready plot and starts that priority at `WorkerPace.job_ticks`.
 
 ### `TutorialTrack` and `FarmLoop`
@@ -117,7 +118,8 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 - `inventory_line()` is the HUD text.
 - Hiring is not a tutorial step. `hire_worker` and `assign_workshop` are available to the simulation at any step. The crew button stays hidden until step `done`.
 - `start_cord` and `fulfill_cord` return `tutorial` before step `done`. Mara's bundle, delivery, and loft steps are unchanged.
-- `inventory_line()` always names Fiber Bundle and Fiber Cord, including a zero count.
+- `inventory_line()` always names Fiber Bundle and Fiber Cord, including a zero count. Packed Textile appears only when a stack exists.
+- `start_wrap` and `fulfill_packed` return `tutorial` before step `done` and `locked` before `pack_line` is owned. `assign_packing` uses the same hire checks as the loom. The same person may hold both stations.
 - `advance` calls `apply_loom_rule` after the clock tick. During the lesson that call returns `tutorial` and leaves the plot for Mara's harvest step.
 
 ### `StaffCatalog`, `StaffRoster`, and `WorkerPace`
@@ -128,8 +130,9 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 - `WorkerPace.job_ticks(recipe_id, person, speed_ticks)` uses that recipe's catalog duration, then the same attribute rule, then subtracts `speed_ticks` when it is positive. `bundle_ticks` is `job_ticks("bundle_fiber", person, 0)`.
 - Alex's total finishes a bundle in 2 ticks, or 1 with the shuttle rack. Bram's finishes in 3, or 2 with the rack. A Fiber Cord is 5, 3, and 4 for nobody, Alex, and Bram, then one tick faster with the rack. The output amount stays 1.
 - A running job keeps the ticks it started with. Reassigning does not edit it.
-- `hire` failure codes: `unknown_worker`, `already_hired`. `assign_workshop` failure codes: `unknown_worker`, `not_hired`. Failures do not change the roster.
-- Listed `wage` is not subtracted from funds.
+- `hire` failure codes: `unknown_worker`, `already_hired`. `assign_workshop` and `assign_packing` failure codes: `unknown_worker`, `not_hired`. Failures do not change the roster. Hire does not charge.
+- Listed wages are 18 (`alex_morgan`) and 12 (`bram_holt`). `FarmLoop.charge_wages(game, ticks)` runs from the farm session, not from `advance`. After step `done`, every `StaffRoster.WAGE_INTERVAL` (10) ticks it subtracts the sum of hired wages, floored at the current funds. The remainder sits in `wage_progress`.
+- `grant_experience` sets one flag per hired id. The next `presented()` copy adds 1 to Efficiency, capped at 10. The catalog is unchanged. Bram's next bundle then uses total 24 (2 ticks). Alex stays at 2 ticks.
 
 ### `FarmHud`
 
@@ -137,18 +140,26 @@ At yaw `0`, forward pan moves focus toward -Z and right pan moves focus toward +
 - `refresh(game, loop, barn_selected)` also sets the inventory line, Mara's prompt, and the last economy event from `FarmLoop`.
 - It does not keep its own copy of the numbers.
 - `CrewButton` is hidden until the tutorial step is `done`. The crew card reads names, ratings, and bundle ticks from `StaffCatalog` and `WorkerPace`.
-- `ResearchButton` is hidden until step `done`, and hides again once `loom_rule` is owned. Its label includes the catalog cost.
-- `PriorityBundle` and `PriorityCord` stay hidden until the rule is owned. The selected one uses the emphasized button style. The workshop body says the rule is on and names the priority. Start bundle and Start cord stay available for a hand start.
+- `ResearchButton` is hidden until step `done`, and hides again once `loom_rule` is owned. Its label includes the catalog cost. `PackResearchButton` does the same for `pack_line`.
+- `PriorityBundle` and `PriorityCord` stay hidden until the loom rule is owned. The selected one uses the emphasized button style. The workshop body says the rule is on and names the priority. Start bundle and Start cord stay available for a hand start.
+- `WorldMapButton` opens a read-only card of all four regions. It marks the current `region_id` and does not write the save.
+- `PackingButton` opens the bench card after `pack_line` is owned. `OrderDeliverPacked` stays off the board until then.
 
 ## Scene nodes
 
 The main scene is `res://scenes/menu/main_menu.tscn`. The playable farm is `res://scenes/farm/first_farm.tscn` and instances `scenes/farm/farm_stage.tscn`.
 
-Tests require `Stage/PlaceholderTerrain` (valley glTF, flat yard, dirt path, and a hill), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA` (and B and C, each a glTF, no primitive trunk), `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker` (glTF), `PlaceholderCrop`, `PlaceholderWorkshop` (shed, beam, and shuttle glTF), `PlaceholderBarnLoft`, `WorkshopWorker` (`work` clip), and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
+Tests require `Stage/PlaceholderTerrain` (valley glTF, flat yard, dirt path, and a hill), `Stage/Barn` (imported mesh), `Stage/PlaceholderTreeA` (and B and C, each a glTF, no primitive trunk), `Stage/Farmhand` (skeleton, `idle`, `walk`), `Stage/FarmCamera`, `PlaceholderPlotMarker` (glTF), `PlaceholderCrop`, `PlaceholderWorkshop` (shed, beam, and shuttle glTF), `PlaceholderBarnLoft`, `WorkshopWorker` (`work` clip), `PackingBench`, `PackingClerk`, `CuePlayer`, and `Hud`. `PlaceholderBarn` and `PlaceholderWalker` are gone.
 
 `PlaceholderWorkshop` sits at `WorkshopRig.WORLD_POSITION` `(6.4, 0, 2.8)`. `advance(delta, false)` does not spin the loom. `advance(delta, true)` does. The scene sets `operating` from `Workshop.is_busy()`. The shed mesh does not own that spin. `LoomArm` and `Shuttle` are the glTF nodes the rig rotates and slides.
 
 `WorkshopWorker` stands in front of that shed. It is hidden until someone is assigned. While the loom is busy it plays the imported `work` clip. While assigned and idle it plays `idle`. `WorkerName` is that person's name. The mesh is the same farmhand glTF, not a second character. The path `Farmhand` is still not an employee.
+
+`PackingBench` sits at `PackingRig.WORLD_POSITION` `(-6.4, 0, -2.2)` and starts hidden. It is shown when `pack_line` is owned. The crate bobs while `packer` is busy. That motion is presentation only. A click within `SELECT_RADIUS` `1.6` opens the bench card and does not snap a plot there.
+
+`PackingClerk` starts hidden at `(-6.2, 0, 6.2)`. Assigning a packing worker shows it and walks it toward `(-5.15, 0, -0.55)` at speed `1.7`. The glTF is `packing_clerk.glb`, not `farmhand.glb`. It has `idle`, `walk`, and `work`.
+
+`CuePlayer` plays `harvest_tone.wav`, `loom_tone.wav`, or `delivery_tone.wav` when `FarmLoop.sound_cue` is `harvest`, `loom`, or `delivery`. Those files are generated sine tones.
 
 `PlaceholderBarnLoft` starts hidden. It is shown when `barn_loft` is owned. The mesh is a placeholder.
 
@@ -174,16 +185,17 @@ Keys:
 - `last_saved_unix`
 - `inventory` (`FarmInventory.snapshot()` keys, `resource#grade`)
 - `workshop` (`recipe_id`, `ticks_remaining`, `locked_grade`)
+- `packer` (the same job dict). Missing loads an idle bench.
 - `camera` (`focus` as three numbers, `yaw`, `pitch`, `distance`)
 - `tutorial_step`
 - `marker` (`{}` or `{x, z}`)
 - `plot` (`planted`, `resource_id`, `stage`, `ticks_remaining`, `grade`). Missing or `{}` means not planted.
 - `orders` (`intro_bundle` and `lane_cord` are `open` or `done`). Missing, `{}`, or a known order omitted from the dict loads that order as `open`.
 - `upgrades` (bool flags, `barn_loft` and `shuttle_rack`). Missing or `{}` means nothing is owned.
-- `staff` (`hired` is an array of catalog ids, `workshop` is `""` or one of those ids). Missing or `{}` means nobody is hired and the bench is unassigned.
-- `research` (`loom_rule` is true when owned, `priority` is `""`, `bundle_fiber`, or `twist_cord`). Missing or `{}` means the rule is locked and the priority is empty. A priority without the unlock, or any other recipe id, is rejected.
+- `staff` (`hired` is an array of catalog ids, `workshop` and `packing` are `""` or one of those ids, `experience` maps a hired id to `0` or `1`, `wage_progress` is `>= 0`). Missing or `{}` means nobody is hired and both stations are unassigned. A packing id that was not hired, an experience flag outside `0..1`, or experience for someone who is not hired is rejected.
+- `research` (`loom_rule` and `pack_line` are true when owned, `priority` is `""`, `bundle_fiber`, or `twist_cord`). Missing or `{}` means both are locked and the priority is empty. A priority without the loom unlock, or any other recipe id, is rejected. An unknown research id is rejected. Owning one unlock does not imply the other.
 
-A plot stage outside `0..3`, a bad grade, an unknown order id, a non-bool upgrade value, an unknown worker id, a duplicate hire, a workshop id that was not hired, an unknown research id, or a priority that is not a loom recipe is rejected. Schema `2` is still rejected. Old schema-1 files that omit `plot`, `orders`, `upgrades`, `staff`, or `research` still load. A file that only stored `intro_bundle` gains `lane_cord` as `open`.
+A plot stage outside `0..3`, a bad grade, an unknown order id, a non-bool upgrade value, an unknown worker id, a duplicate hire, a workshop or packing id that was not hired, an unknown research id, or a priority that is not a loom recipe is rejected. Schema `2` is still rejected. Old schema-1 files that omit `plot`, `orders`, `upgrades`, `staff`, `research`, or `packer` still load. A file that only stored `intro_bundle` gains `lane_cord` and `packed_crate` as `open`.
 
 `create_new` requires a non-empty name of at most 32 characters and a catalog region. Starting funds are `RegionCatalog.PURSE - property_cost` (purse `500`, untuned). The file also stores 4 common Verdant Fiber so the inventory snapshot is real. That stack is not a grow recipe.
 
@@ -191,6 +203,6 @@ A plot stage outside `0..3`, a bad grade, an unknown order id, a non-bool upgrad
 
 ## Region rows
 
-`RegionCatalog` is data. Fields: `id`, `display_name`, `climate_label`, `season_amplitude`, `property_cost`, `upkeep_modifier`, `infrastructure_difficulty`, `opportunity`, `challenge`, `starting_funds`, `map_x`, `map_y`. No latitude, soil, statute, or cultivation fields.
+`RegionCatalog` is data. Fields: `id`, `display_name`, `climate_label`, `season_amplitude`, `property_cost`, `upkeep_modifier`, `infrastructure_difficulty`, `opportunity`, `challenge`, `starting_funds`, `map_x`, `map_y`, `economy_profile`, `play_style`. No latitude, soil, statute, or cultivation fields. `detail_text()` is the card the menu and the farm world map share.
 
 Ids: `northern_homestead`, `tropical_valley`, `innovation_plains`, `golden_fields`. Numbers are untuned gameplay tuning. `map_x` and `map_y` are layout fractions for the menu, not geography.

@@ -63,7 +63,10 @@ func _farm() -> String:
 		"PlaceholderBarnLoft",
 		"PlaceholderShuttleRack",
 		"WorkshopWorker",
+		"PackingBench",
+		"PackingClerk",
 		"Hud",
+		"CuePlayer",
 	]:
 		if farm.get_node_or_null(node_name) == null:
 			return "missing %s" % node_name
@@ -180,9 +183,65 @@ func _farm() -> String:
 	)
 	if hit == null or (hit as Vector3).distance_to(Vector3(4, 0, 4)) > 0.2:
 		return "camera ray missed the ground point"
+	var supply_reason := _supply(farm)
+	if supply_reason != "":
+		return supply_reason
 	root.remove_child(farm)
 	farm.free()
 	library.wipe()
+	return ""
+
+
+func _supply(farm) -> String:
+	var session := farm as FarmSession
+	for cue_name in ["harvest", "loom", "delivery"]:
+		var stream: AudioStream = session._streams.get(cue_name)
+		if stream == null:
+			return "missing %s tone" % cue_name
+	if session.get_node_or_null("CuePlayer") == null:
+		return "no cue player"
+	var bench := session.get_node("PackingBench") as PackingRig
+	if bench == null:
+		return "no packing bench"
+	if bench.visible:
+		return "bench visible before research"
+	if bench.global_position.distance_to(PackingRig.WORLD_POSITION) > 0.05:
+		return "bench at %s" % str(bench.global_position)
+	var bench_mesh := _gltf_child(bench, "Model", "packing bench")
+	if bench_mesh != "":
+		return bench_mesh
+	var clerk := session.get_node("PackingClerk") as PackingClerk
+	if clerk == null:
+		return "no packing clerk"
+	if clerk.visible:
+		return "clerk visible before assign"
+	var model := clerk.get_node_or_null("Model")
+	if model == null or not str(model.scene_file_path).ends_with("packing_clerk.glb"):
+		return "clerk mesh %s" % str(model.scene_file_path if model != null else "missing")
+	if str(model.scene_file_path).ends_with("farmhand.glb"):
+		return "clerk reuses the farmhand"
+	var anim: AnimationPlayer = clerk.animation_player()
+	if anim == null or not anim.has_animation("walk"):
+		return "clerk walk clip"
+	session.game.funds = 500
+	session.loop.tutorial.step = TutorialTrack.DONE
+	if session.buy_pack_line() != "":
+		return "pack line"
+	if not bench.visible:
+		return "bench stayed hidden"
+	if session.hire_worker("bram_holt") != "":
+		return "hire bram"
+	if session.assign_packing("bram_holt") != "":
+		return "assign packing"
+	if not clerk.visible or clerk.current_clip() != "walk":
+		return "clerk did not start walking %s" % clerk.current_clip()
+	var start: Vector3 = clerk.global_position
+	clerk.advance(1.0)
+	var moved := start.distance_to(clerk.global_position)
+	if moved < 1.5 or moved > 1.9:
+		return "clerk moved %.3f" % moved
+	if clerk.global_position.distance_to(PackingClerk.JOB) >= start.distance_to(PackingClerk.JOB):
+		return "clerk walked away from the bench"
 	return ""
 
 
@@ -492,6 +551,9 @@ func _menu() -> String:
 			str(region["opportunity"]),
 			str(region["challenge"]),
 			str(region["property_cost"]),
+			"Play style",
+			"Economy",
+			str(region["play_style"]),
 		]:
 			if not detail.contains(piece):
 				return "detail %s missing %s" % [region_id, piece]

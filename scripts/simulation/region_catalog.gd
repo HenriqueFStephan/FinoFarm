@@ -46,6 +46,25 @@ static func difficulty_label(value: float) -> String:
 	return "high"
 
 
+static func detail_text(region: Dictionary) -> String:
+	return "\n".join([
+		str(region["display_name"]),
+		"Climate: %s" % str(region["climate_label"]),
+		"Season amplitude: %s" % str(region["season_amplitude"]),
+		"Property cost: %d" % int(region["property_cost"]),
+		"Upkeep: x%s" % str(region["upkeep_modifier"]),
+		"Infrastructure: %s" % difficulty_label(float(region["infrastructure_difficulty"])),
+		"Economy: %s" % str(region.get("economy_profile", "")),
+		"Starting funds: %d" % int(region["starting_funds"]),
+		"Play style: %s" % str(region.get("play_style", "")),
+		"",
+		"Opportunity: %s" % str(region["opportunity"]),
+		"Challenge: %s" % str(region["challenge"]),
+		"",
+		"Gameplay tuning, not a geographic claim.",
+	])
+
+
 static func forbidden_key_present() -> String:
 	for entry in _rows():
 		for key in (entry as Dictionary).keys():
@@ -66,6 +85,8 @@ static func _rows() -> Array:
 			"infrastructure_difficulty": 0.72,
 			"opportunity": "Indoor workshops stay busy through the long cool season.",
 			"challenge": "Heated buildings cost more fictional upkeep.",
+			"economy_profile": "Steady indoor contracts, higher building upkeep.",
+			"play_style": "Keep work indoors and budget for upkeep.",
 			"map_x": 0.22,
 			"map_y": 0.18,
 		},
@@ -79,6 +100,8 @@ static func _rows() -> Array:
 			"infrastructure_difficulty": 0.4,
 			"opportunity": "Short seasons open more event contracts.",
 			"challenge": "Weather swings delay outdoor staging.",
+			"economy_profile": "More event contracts, uneven outdoor timing.",
+			"play_style": "Plan around short seasons and outdoor delays.",
 			"map_x": 0.70,
 			"map_y": 0.66,
 		},
@@ -92,6 +115,8 @@ static func _rows() -> Array:
 			"infrastructure_difficulty": 0.84,
 			"opportunity": "Research rooms unlock sooner.",
 			"challenge": "Plots are expensive and infrastructure costs more.",
+			"economy_profile": "Expensive plots, faster access to research.",
+			"play_style": "Buy research before you spread out.",
 			"map_x": 0.24,
 			"map_y": 0.70,
 		},
@@ -105,6 +130,8 @@ static func _rows() -> Array:
 			"infrastructure_difficulty": 0.5,
 			"opportunity": "Premium contracts pay more for select grades.",
 			"challenge": "Dry seasons raise utility upkeep in the game economy.",
+			"economy_profile": "Premium select-grade orders, higher dry-season costs.",
+			"play_style": "Aim at premium orders and watch dry-season costs.",
 			"map_x": 0.68,
 			"map_y": 0.22,
 		},
